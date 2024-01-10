@@ -1,7 +1,9 @@
 package com.wolt.wm.training.bank.api
 
 import com.wolt.wm.training.bank.customer.models.ApiCustomerPage
+import com.wolt.wm.training.bank.customer.models.CreateCustomerRequest
 import com.wolt.wm.training.bank.customer.models.Customer
+import com.wolt.wm.training.bank.customer.models.UpdateCustomerRequest
 import com.wolt.wm.training.bank.customer.services.CustomerService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -38,11 +40,39 @@ class CustomerController(private val customerService: CustomerService) {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createCustomer(@RequestBody customer: Customer) = customerService.createCustomer(customer)
+    fun createCustomer(@RequestBody customerRequest: CreateCustomerRequest) {
+        val newCustomerId = UUID.randomUUID()
 
-    @PutMapping
+        val customer = Customer(
+            id = newCustomerId,
+            firstName = customerRequest.firstName,
+            lastName = customerRequest.lastName,
+            birthdate = customerRequest.birthdate,
+            gender = customerRequest.gender,
+            address = customerRequest.address,
+            email = customerRequest.email,
+            phone = customerRequest.phone,
+        )
+
+        return customerService.createCustomer(customer)
+    }
+
+    @PutMapping("/{customerId}")
     @ResponseStatus(HttpStatus.OK)
-    fun updateCustomer(@RequestBody customer: Customer) = customerService.updateCustomer(customer)
+    fun updateCustomer(@PathVariable customerId: UUID, @RequestBody customerRequest: UpdateCustomerRequest) {
+        val customer: Customer = Customer(
+            id = customerId,
+            firstName = customerRequest.firstName,
+            lastName = customerRequest.lastName,
+            birthdate = customerRequest.birthdate,
+            gender = customerRequest.gender,
+            address = customerRequest.address,
+            email = customerRequest.email,
+            phone = customerRequest.phone,
+        )
+
+        return customerService.updateCustomer(customer)
+    }
 
     @DeleteMapping("/{customerId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

@@ -3,7 +3,8 @@ package com.wolt.wm.training.bank.customer.repositories
 import com.wolt.wm.training.bank.customer.models.Address
 import com.wolt.wm.training.bank.customer.models.Customer
 import java.io.File
-import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 fun convertCsvRowToCustomer(row: String): Customer {
@@ -19,13 +20,13 @@ fun convertCsvRowToCustomer(row: String): Customer {
     val city = columns[8]
     val country = columns[9]
     val postalCode = columns[10]
-    val dateFormat = SimpleDateFormat("yyyy-MM-dd")
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
     return Customer(
         id = UUID.fromString(id),
         firstName = firstName,
         lastName = lastName,
-        birthdate = dateFormat.parse(birthdate),
+        birthdate = LocalDate.parse(birthdate, dateFormatter),
         gender = gender.ifBlank { null },
         email = email.ifBlank { null },
         phone = phone.ifBlank { null },
