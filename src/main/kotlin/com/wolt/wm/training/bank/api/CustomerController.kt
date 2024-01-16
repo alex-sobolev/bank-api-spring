@@ -1,6 +1,6 @@
 package com.wolt.wm.training.bank.api
 
-import com.wolt.wm.training.bank.customer.models.ApiCustomerPage
+import com.wolt.wm.training.bank.customer.models.ApiCustomerListPage
 import com.wolt.wm.training.bank.customer.models.CreateCustomerRequest
 import com.wolt.wm.training.bank.customer.models.Customer
 import com.wolt.wm.training.bank.customer.models.UpdateCustomerRequest
@@ -26,11 +26,11 @@ class CustomerController(private val customerService: CustomerService) {
         @RequestParam query: String?,
         @RequestParam pageSize: Int?,
         @RequestParam page: Int?,
-    ): ResponseEntity<ApiCustomerPage> {
+    ): ResponseEntity<ApiCustomerListPage> {
         val pageSize = pageSize ?: 50
         val page = page ?: 1
         val customers = customerService.getCustomers(query = query, pageSize = pageSize, page = page)
-        val payload = ApiCustomerPage(customers = customers, page = page, pageSize = pageSize)
+        val payload = ApiCustomerListPage(customers = customers, page = page, pageSize = pageSize)
 
         return ResponseEntity(payload, HttpStatus.OK)
     }
