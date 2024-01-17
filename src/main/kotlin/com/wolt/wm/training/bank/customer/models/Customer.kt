@@ -21,7 +21,7 @@ data class Address(
     val postalCode: String?
 )
 
-data class ApiCustomerPage(
+data class ApiCustomerListPage(
     val customers: List<Customer>,
     val page: Int,
     val pageSize: Int,
