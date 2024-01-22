@@ -1,6 +1,7 @@
 package com.wolt.wm.training.bank.account.models
 
 import com.wolt.wm.training.bank.customer.models.Customer
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
 
@@ -25,7 +26,7 @@ enum class Currency {
 data class Account(
     val id: UUID,
     val customerId: UUID,
-    val balance: Double,
+    val balance: BigDecimal,
     val currency: Currency,
     val type: AccountType,
     val status: AccountStatus,
@@ -48,7 +49,7 @@ enum class AccountTransactionStatus {
 data class AccountTransaction(
     val id: UUID,
     val accountId: UUID,
-    val amount: Double,
+    val amount: BigDecimal,
     val currency: Currency,
     val type: AccountTransactionType,
     val status: AccountTransactionStatus,
@@ -86,19 +87,19 @@ data class ApiCustomerAccountList(
 )
 
 data class CreateAccountRequest(
-    val customerId: UUID,
+    val customerId: String,
     val currency: Currency,
     val type: AccountType,
 )
 
 data class AccountDepositRequest(
     val accountId: String,
-    val amount: Double,
+    val amount: BigDecimal,
     val currency: Currency,
 )
 
 data class AccountWithdrawRequest(
     val accountId: String,
-    val amount: Double,
+    val amount: BigDecimal,
     val currency: Currency,
 )

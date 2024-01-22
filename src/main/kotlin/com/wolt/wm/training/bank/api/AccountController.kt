@@ -2,25 +2,18 @@ package com.wolt.wm.training.bank.api
 
 import com.wolt.wm.training.bank.account.models.*
 import com.wolt.wm.training.bank.account.services.AccountService
-import com.wolt.wm.training.bank.common.models.ApiErrorResponseBody
 import com.wolt.wm.training.bank.customer.services.CustomerService
+import com.wolt.wm.training.bank.utils.parseUuidFromString
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
 
 @RestController
 @RequestMapping("/api/accounts")
 class AccountController(private val accountService: AccountService, private val customerService: CustomerService) {
-    @ExceptionHandler(NoSuchElementException::class)
-    fun handleNotFound(err: NoSuchElementException): ResponseEntity<ApiErrorResponseBody> =
-        ResponseEntity(ApiErrorResponseBody(error = err.message, status = 404), HttpStatus.NOT_FOUND)
-
-    @ExceptionHandler(IllegalArgumentException::class)
-    fun handleBadRequest(err: IllegalArgumentException): ResponseEntity<ApiErrorResponseBody> =
-        ResponseEntity(ApiErrorResponseBody(error = err.message, status = 400), HttpStatus.BAD_REQUEST)
-
     @GetMapping
     fun getAccounts(
         @RequestParam query: String?,
@@ -47,7 +40,6 @@ class AccountController(private val accountService: AccountService, private val 
         return ResponseEntity.ok(ApiAccount(account = account, customer = customer))
     }
 
-
     @GetMapping("/customers/{customerId}")
     fun getAccountsByCustomerId(@PathVariable customerId: String): ResponseEntity<ApiCustomerAccountList> {
         val customerId = UUID.fromString(customerId)
@@ -63,14 +55,15 @@ class AccountController(private val accountService: AccountService, private val 
     @PostMapping("/create")
     fun createAccount(@RequestBody accountRequest: CreateAccountRequest): ResponseEntity<ApiAccount> {
         val newAccountId = UUID.randomUUID()
+        val customerId = parseUuidFromString(accountRequest.customerId, "Invalid customer id format")
 
-        val customer = customerService.getCustomer(accountRequest.customerId)
+        val customer = customerService.getCustomer(customerId)
             ?: throw NoSuchElementException("Customer with id ${accountRequest.customerId} not found")
 
         val account = Account(
             id = newAccountId,
-            customerId = accountRequest.customerId,
-            balance = 0.0,
+            customerId = customerId,
+            balance = 0.toBigDecimal(),
             currency = accountRequest.currency,
             type = accountRequest.type,
             status = AccountStatus.ACTIVE,
@@ -103,11 +96,15 @@ class AccountController(private val accountService: AccountService, private val 
         val customer = customerService.getCustomer(account.customerId)
             ?: throw NoSuchElementException("Customer with id ${account.customerId} not found")
 
-        val amount: Double = try {
-            depositRequest.amount.toDouble()
-        } catch (e: NumberFormatException) {
-            throw IllegalArgumentException("Invalid number format ('amount'): ${depositRequest.amount}")
+        if (account.currency != depositRequest.currency) {
+            throw IllegalArgumentException("Deposit currency must match account currency")
         }
+
+        if (depositRequest.amount <= 0.toBigDecimal()) {
+            throw IllegalArgumentException("Deposit amount must be positive")
+        }
+
+        val amount: BigDecimal = depositRequest.amount
 
         val updatedAccount = account.copy(
             balance = account.balance + amount,
@@ -129,10 +126,14 @@ class AccountController(private val accountService: AccountService, private val 
         val customer = customerService.getCustomer(account.customerId)
             ?: throw NoSuchElementException("Customer with id ${account.customerId} not found")
 
-        val amount: Double = try {
-            withdrawRequest.amount.toDouble()
-        } catch (e: NumberFormatException) {
-            throw IllegalArgumentException("Invalid number format ('amount'): ${withdrawRequest.amount}")
+        if (account.currency != withdrawRequest.currency) {
+            throw IllegalArgumentException("Withdraw currency must match account currency")
+        }
+
+        val amount: BigDecimal = withdrawRequest.amount
+
+        if (amount <= 0.toBigDecimal()) {
+            throw IllegalArgumentException("Withdraw amount must be positive")
         }
 
         if (account.balance < amount) {

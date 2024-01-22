@@ -27,18 +27,7 @@ data class ApiCustomerListPage(
     val pageSize: Int,
 )
 
-data class CreateCustomerRequest(
-    val firstName: String,
-    val lastName: String,
-    val birthdate: LocalDate,
-    val gender: String?,
-    val address: Address,
-    val email: String?,
-    val phone: String?,
-)
-
-data class UpdateCustomerRequest(
-    val id: UUID,
+data class CustomerRequest(
     val firstName: String,
     val lastName: String,
     val birthdate: LocalDate,
