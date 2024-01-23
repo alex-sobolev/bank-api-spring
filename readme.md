@@ -44,5 +44,25 @@ APIs:
 - Deposit money to an account
 - Withdraw money from an account
 
+#### Step-3
 
+Implement validations for the API request. Investigate how to use [@ExceptionHandler](https://spring.io/blog/2013/11/01/exception-handling-in-spring-mvc/#using-exceptionhandler)
+and [@ControllerAdvice](https://spring.io/blog/2013/11/01/exception-handling-in-spring-mvc/#using-controlleradvice-classes).
 
+Customer validations
+- Name should not be blank
+- Birthdate should be before now
+- Address should not be blank
+- Email should have a valid format
+- Phone number should have a valid format
+
+Account validations
+- Currency should be a valid currency
+- Customer id should exist
+- Deposit account should exist
+- Deposit amount should be bigger than 0
+- Deposit currency should be same as account currency
+- Withdraw account should exist
+- Withdraw amount should be bigger than 0
+- Withdraw amount should be less or equal to the account balance
+- Withdraw currency should be same as account currency
