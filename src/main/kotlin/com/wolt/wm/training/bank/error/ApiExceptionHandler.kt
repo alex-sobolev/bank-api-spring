@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import java.util.NoSuchElementException
 
 @ControllerAdvice
-class ApiErrors {
+class ApiExceptionHandler {
     @ExceptionHandler(NoSuchElementException::class)
     fun handleNotFound(err: NoSuchElementException): ResponseEntity<ApiErrorResponseBody> =
         ResponseEntity(ApiErrorResponseBody(error = err.message, status = 404), HttpStatus.NOT_FOUND)
