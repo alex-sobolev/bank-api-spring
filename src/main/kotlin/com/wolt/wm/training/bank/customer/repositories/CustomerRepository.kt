@@ -16,13 +16,13 @@ class CustomerRepository {
             query.isNullOrBlank() -> customers
             else -> customers.filter {
                 it.firstName.contains(query, ignoreCase = true) ||
-                it.lastName.contains(query, ignoreCase = true) ||
-                "${it.firstName} ${it.lastName}".contains(query, ignoreCase = true) ||
-                it.address.street.contains(query, ignoreCase = true) ||
-                it.address.city.contains(query, ignoreCase = true) ||
-                it.address.country.contains(query, ignoreCase = true) ||
-                it.address.postalCode?.contains(query, ignoreCase = true) ?: false ||
-                it.email?.contains(query, ignoreCase = true) ?: false
+                    it.lastName.contains(query, ignoreCase = true) ||
+                    "${it.firstName} ${it.lastName}".contains(query, ignoreCase = true) ||
+                    it.address.street.contains(query, ignoreCase = true) ||
+                    it.address.city.contains(query, ignoreCase = true) ||
+                    it.address.country.contains(query, ignoreCase = true) ||
+                    it.address.postalCode?.contains(query, ignoreCase = true) ?: false ||
+                    it.email?.contains(query, ignoreCase = true) ?: false
             }
         }
 

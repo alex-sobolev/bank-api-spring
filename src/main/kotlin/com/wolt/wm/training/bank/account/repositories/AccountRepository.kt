@@ -2,24 +2,30 @@ package com.wolt.wm.training.bank.account.repositories
 
 import com.wolt.wm.training.bank.account.models.Account
 import org.springframework.stereotype.Repository
-import java.util.*
+import java.util.UUID
 
 @Repository
 class AccountRepository {
     private val accounts: MutableList<Account> = mutableListOf()
 
-    fun getAccounts(query: String?, pageSize: Int, page: Int): List<Account> {
+    fun getAccounts(
+        query: String?,
+        pageSize: Int,
+        page: Int,
+    ): List<Account> {
         val offset = (page - 1) * pageSize
 
-        val filteredAccounts = when {
-            query.isNullOrBlank() -> accounts
-            else -> accounts.filter {
-                it.id.toString().contains(query, ignoreCase = true) ||
-                it.customerId.toString().contains(query, ignoreCase = true) ||
-                it.balance.toString().contains(query, ignoreCase = true) ||
-                it.currency.toString().contains(query, ignoreCase = true)
+        val filteredAccounts =
+            when {
+                query.isNullOrBlank() -> accounts
+                else ->
+                    accounts.filter {
+                        it.id.toString().contains(query, ignoreCase = true) ||
+                            it.customerId.toString().contains(query, ignoreCase = true) ||
+                            it.balance.toString().contains(query, ignoreCase = true) ||
+                            it.currency.toString().contains(query, ignoreCase = true)
+                    }
             }
-        }
 
         return when {
             filteredAccounts.size >= offset + pageSize -> filteredAccounts.subList(offset, offset + pageSize)
