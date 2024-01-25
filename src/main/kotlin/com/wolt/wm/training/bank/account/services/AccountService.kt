@@ -3,7 +3,7 @@ package com.wolt.wm.training.bank.account.services
 import com.wolt.wm.training.bank.account.models.Account
 import com.wolt.wm.training.bank.account.repositories.AccountRepository
 import org.springframework.stereotype.Service
-import java.util.*
+import java.util.UUID
 
 @Service
 class AccountService(private val accountRepository: AccountRepository) {

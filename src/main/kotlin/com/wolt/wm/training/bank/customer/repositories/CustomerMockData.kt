@@ -5,7 +5,7 @@ import com.wolt.wm.training.bank.customer.models.Customer
 import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.UUID
 
 fun convertCsvRowToCustomer(row: String): Customer {
     val columns = row.split(",")
@@ -31,12 +31,12 @@ fun convertCsvRowToCustomer(row: String): Customer {
         email = email.ifBlank { null },
         phone = phone.ifBlank { null },
         address =
-        Address(
-            street = streetAddress,
-            city = city,
-            country = country,
-            postalCode = postalCode.ifBlank { null },
-        ),
+            Address(
+                street = streetAddress,
+                city = city,
+                country = country,
+                postalCode = postalCode.ifBlank { null },
+            ),
     )
 }
 

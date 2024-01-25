@@ -3,7 +3,7 @@ package com.wolt.wm.training.bank.customer.services
 import com.wolt.wm.training.bank.customer.models.Customer
 import com.wolt.wm.training.bank.customer.repositories.CustomerRepository
 import org.springframework.stereotype.Service
-import java.util.*
+import java.util.UUID
 
 @Service
 class CustomerService(private val customerRepository: CustomerRepository) {

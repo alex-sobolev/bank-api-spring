@@ -1,15 +1,30 @@
 package com.wolt.wm.training.bank.api
 
-import com.wolt.wm.training.bank.account.models.*
+import com.wolt.wm.training.bank.account.models.Account
+import com.wolt.wm.training.bank.account.models.AccountDepositRequest
+import com.wolt.wm.training.bank.account.models.AccountStatus
+import com.wolt.wm.training.bank.account.models.AccountWithdrawRequest
+import com.wolt.wm.training.bank.account.models.ApiAccount
+import com.wolt.wm.training.bank.account.models.ApiAccountListPage
+import com.wolt.wm.training.bank.account.models.ApiCustomerAccountList
+import com.wolt.wm.training.bank.account.models.CreateAccountRequest
 import com.wolt.wm.training.bank.account.services.AccountService
 import com.wolt.wm.training.bank.customer.services.CustomerService
 import com.wolt.wm.training.bank.utils.parseUuidFromString
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.RestController
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 @RestController
 @RequestMapping("/api/accounts")
@@ -28,24 +43,30 @@ class AccountController(private val accountService: AccountService, private val 
     }
 
     @GetMapping("/{accountId}")
-    fun getAccountById(@PathVariable accountId: String): ResponseEntity<ApiAccount> {
+    fun getAccountById(
+        @PathVariable accountId: String,
+    ): ResponseEntity<ApiAccount> {
         val accountId = UUID.fromString(accountId)
 
         val account =
             accountService.getAccount(accountId) ?: throw NoSuchElementException("Account with id $accountId not found")
 
-        val customer = customerService.getCustomer(account.customerId)
-            ?: throw NoSuchElementException("Customer with id ${account.customerId} not found")
+        val customer =
+            customerService.getCustomer(account.customerId)
+                ?: throw NoSuchElementException("Customer with id ${account.customerId} not found")
 
         return ResponseEntity.ok(ApiAccount(account = account, customer = customer))
     }
 
     @GetMapping("/customers/{customerId}")
-    fun getAccountsByCustomerId(@PathVariable customerId: String): ResponseEntity<ApiCustomerAccountList> {
+    fun getAccountsByCustomerId(
+        @PathVariable customerId: String,
+    ): ResponseEntity<ApiCustomerAccountList> {
         val customerId = UUID.fromString(customerId)
 
-        val customer = customerService.getCustomer(customerId)
-            ?: throw NoSuchElementException("Customer with id $customerId not found")
+        val customer =
+            customerService.getCustomer(customerId)
+                ?: throw NoSuchElementException("Customer with id $customerId not found")
 
         val accounts = accountService.getAccountsByCustomerId(customerId)
 
@@ -53,23 +74,27 @@ class AccountController(private val accountService: AccountService, private val 
     }
 
     @PostMapping("/create")
-    fun createAccount(@RequestBody accountRequest: CreateAccountRequest): ResponseEntity<ApiAccount> {
+    fun createAccount(
+        @RequestBody accountRequest: CreateAccountRequest,
+    ): ResponseEntity<ApiAccount> {
         val newAccountId = UUID.randomUUID()
         val customerId = parseUuidFromString(accountRequest.customerId, "Invalid customer id format")
 
-        val customer = customerService.getCustomer(customerId)
-            ?: throw NoSuchElementException("Customer with id ${accountRequest.customerId} not found")
+        val customer =
+            customerService.getCustomer(customerId)
+                ?: throw NoSuchElementException("Customer with id ${accountRequest.customerId} not found")
 
-        val account = Account(
-            id = newAccountId,
-            customerId = customerId,
-            balance = 0.toBigDecimal(),
-            currency = accountRequest.currency,
-            type = accountRequest.type,
-            status = AccountStatus.ACTIVE,
-            createdAt = LocalDate.now(),
-            updatedAt = null,
-        )
+        val account =
+            Account(
+                id = newAccountId,
+                customerId = customerId,
+                balance = 0.toBigDecimal(),
+                currency = accountRequest.currency,
+                type = accountRequest.type,
+                status = AccountStatus.ACTIVE,
+                createdAt = LocalDate.now(),
+                updatedAt = null,
+            )
 
         accountService.createAccount(account)
 
@@ -78,7 +103,9 @@ class AccountController(private val accountService: AccountService, private val 
 
     @DeleteMapping("/{accountId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteAccount(@PathVariable accountId: String) {
+    fun deleteAccount(
+        @PathVariable accountId: String,
+    ) {
         val accountId = UUID.fromString(accountId)
         val account =
             accountService.getAccount(accountId) ?: throw NoSuchElementException("Account with id $accountId not found")
@@ -87,14 +114,17 @@ class AccountController(private val accountService: AccountService, private val 
     }
 
     @PostMapping("/deposit")
-    fun depositMoney(@RequestBody depositRequest: AccountDepositRequest): ResponseEntity<ApiAccount> {
+    fun depositMoney(
+        @RequestBody depositRequest: AccountDepositRequest,
+    ): ResponseEntity<ApiAccount> {
         val accountId = UUID.fromString(depositRequest.accountId)
 
         val account =
             accountService.getAccount(accountId) ?: throw NoSuchElementException("Account with id $accountId not found")
 
-        val customer = customerService.getCustomer(account.customerId)
-            ?: throw NoSuchElementException("Customer with id ${account.customerId} not found")
+        val customer =
+            customerService.getCustomer(account.customerId)
+                ?: throw NoSuchElementException("Customer with id ${account.customerId} not found")
 
         if (account.currency != depositRequest.currency) {
             throw IllegalArgumentException("Deposit currency must match account currency")
@@ -106,10 +136,11 @@ class AccountController(private val accountService: AccountService, private val 
 
         val amount: BigDecimal = depositRequest.amount
 
-        val updatedAccount = account.copy(
-            balance = account.balance + amount,
-            updatedAt = LocalDate.now(),
-        )
+        val updatedAccount =
+            account.copy(
+                balance = account.balance + amount,
+                updatedAt = LocalDate.now(),
+            )
 
         accountService.updateAccount(updatedAccount)
 
@@ -117,14 +148,17 @@ class AccountController(private val accountService: AccountService, private val 
     }
 
     @PostMapping("/withdraw")
-    fun withdrawMoney(@RequestBody withdrawRequest: AccountWithdrawRequest): ResponseEntity<ApiAccount> {
+    fun withdrawMoney(
+        @RequestBody withdrawRequest: AccountWithdrawRequest,
+    ): ResponseEntity<ApiAccount> {
         val accountId = UUID.fromString(withdrawRequest.accountId)
 
         val account =
             accountService.getAccount(accountId) ?: throw NoSuchElementException("Account with id $accountId not found")
 
-        val customer = customerService.getCustomer(account.customerId)
-            ?: throw NoSuchElementException("Customer with id ${account.customerId} not found")
+        val customer =
+            customerService.getCustomer(account.customerId)
+                ?: throw NoSuchElementException("Customer with id ${account.customerId} not found")
 
         if (account.currency != withdrawRequest.currency) {
             throw IllegalArgumentException("Withdraw currency must match account currency")
@@ -140,10 +174,11 @@ class AccountController(private val accountService: AccountService, private val 
             throw IllegalArgumentException("Account balance is less than requested amount")
         }
 
-        val updatedAccount = account.copy(
-            balance = account.balance - amount,
-            updatedAt = LocalDate.now(),
-        )
+        val updatedAccount =
+            account.copy(
+                balance = account.balance - amount,
+                updatedAt = LocalDate.now(),
+            )
 
         accountService.updateAccount(updatedAccount)
 
