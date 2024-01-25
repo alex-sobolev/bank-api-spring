@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class BankApplication
 
 fun main(args: Array<String>) {
-	runApplication<BankApplication>(*args)
+    runApplication<BankApplication>(*args)
 }

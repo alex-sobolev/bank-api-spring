@@ -66,3 +66,24 @@ Account validations
 - Withdraw amount should be bigger than 0
 - Withdraw amount should be less or equal to the account balance
 - Withdraw currency should be same as account currency
+
+### Step-4
+
+Test the validations that you have implemented in Step-3.
+
+Consider using [JUnit](https://junit.org/junit5/docs/current/user-guide/#writing-tests), [WebTestClient](https://docs.spring.io/spring-framework/reference/testing/webtestclient.html#webtestclient-tests)
+and [Kotest assertions](https://kotest.io/docs/assertions/assertions.html).
+WebTestClient is already configured in `IntegrationBaseTest`.
+
+Example usage:
+```kotlin
+class HelloControllerTest(
+    @Autowired private val webTestClient: WebTestClient,
+): IntegrationBaseTest() {
+
+    @Test
+    fun `returns hello world`() {
+        // TODO
+    }
+}
+```

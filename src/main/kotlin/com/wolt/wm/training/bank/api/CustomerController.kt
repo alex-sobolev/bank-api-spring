@@ -8,9 +8,18 @@ import com.wolt.wm.training.bank.customer.services.CustomerService
 import com.wolt.wm.training.bank.utils.parseUuidFromString
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 @RestController
 @RequestMapping("/api/customers")
@@ -35,17 +44,23 @@ class CustomerController(private val customerService: CustomerService) {
         if (customerRequest.address.city.isBlank()) throw IllegalArgumentException("City is required")
         if (customerRequest.address.country.isBlank()) throw IllegalArgumentException("Country is required")
 
-        if (customerRequest.address.postalCode != null && customerRequest.address.postalCode.isBlank()) throw IllegalArgumentException(
-            "Postal code cannot be blank"
-        )
+        if (customerRequest.address.postalCode != null && customerRequest.address.postalCode.isBlank()) {
+            throw IllegalArgumentException(
+                "Postal code cannot be blank",
+            )
+        }
 
-        if (customerRequest.email != null && !customerRequest.email.isValidEmail()) throw IllegalArgumentException(
-            "Invalid email address"
-        )
+        if (customerRequest.email != null && !customerRequest.email.isValidEmail()) {
+            throw IllegalArgumentException(
+                "Invalid email address",
+            )
+        }
 
-        if (customerRequest.phone != null && !isValidPhoneNumber(customerRequest.phone)) throw IllegalArgumentException(
-            "Invalid phone number"
-        )
+        if (customerRequest.phone != null && !isValidPhoneNumber(customerRequest.phone)) {
+            throw IllegalArgumentException(
+                "Invalid phone number",
+            )
+        }
     }
 
     @GetMapping
@@ -63,17 +78,22 @@ class CustomerController(private val customerService: CustomerService) {
     }
 
     @GetMapping("/{customerId}")
-    fun getCustomer(@PathVariable customerId: String): ResponseEntity<Customer> {
+    fun getCustomer(
+        @PathVariable customerId: String,
+    ): ResponseEntity<Customer> {
         val customerId = parseUuidFromString(customerId, "Invalid customer id format: $customerId")
 
-        val customer = customerService.getCustomer(customerId)
-            ?: throw NoSuchElementException("Customer with id $customerId not found")
+        val customer =
+            customerService.getCustomer(customerId)
+                ?: throw NoSuchElementException("Customer with id $customerId not found")
 
         return ResponseEntity.ok(customer)
     }
 
     @PostMapping
-    fun createCustomer(@RequestBody customerRequest: CustomerRequest): ResponseEntity<Customer> {
+    fun createCustomer(
+        @RequestBody customerRequest: CustomerRequest,
+    ): ResponseEntity<Customer> {
         validateCustomerRequest(customerRequest)
 
         val newCustomerId = UUID.randomUUID()
@@ -87,7 +107,7 @@ class CustomerController(private val customerService: CustomerService) {
     @PutMapping("/{customerId}")
     fun updateCustomer(
         @PathVariable customerId: String,
-        @RequestBody customerRequest: CustomerRequest
+        @RequestBody customerRequest: CustomerRequest,
     ): ResponseEntity<Customer> {
         val customerId = parseUuidFromString(customerId, "Invalid customer id format: $customerId")
 
@@ -105,7 +125,9 @@ class CustomerController(private val customerService: CustomerService) {
 
     @DeleteMapping("/{customerId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteCustomer(@PathVariable customerId: String) {
+    fun deleteCustomer(
+        @PathVariable customerId: String,
+    ) {
         val customerId = parseUuidFromString(customerId, "Invalid customer id format")
 
         customerService.getCustomer(customerId)

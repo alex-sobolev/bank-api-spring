@@ -30,12 +30,13 @@ fun convertCsvRowToCustomer(row: String): Customer {
         gender = gender.ifBlank { null },
         email = email.ifBlank { null },
         phone = phone.ifBlank { null },
-        address = Address(
+        address =
+        Address(
             street = streetAddress,
             city = city,
             country = country,
             postalCode = postalCode.ifBlank { null },
-        )
+        ),
     )
 }
 
