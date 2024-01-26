@@ -56,4 +56,8 @@ class AccountRepository {
         val account = accounts.find { it.id == accountId }
         accounts.remove(account)
     }
+
+    fun deleteAllAccounts() {
+        accounts.clear()
+    }
 }

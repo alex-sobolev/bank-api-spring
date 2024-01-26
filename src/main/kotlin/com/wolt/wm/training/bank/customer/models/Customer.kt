@@ -1,7 +1,7 @@
 package com.wolt.wm.training.bank.customer.models
 
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 data class Customer(
     val id: UUID,

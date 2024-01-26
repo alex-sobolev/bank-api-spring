@@ -6,6 +6,11 @@ import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import java.util.NoSuchElementException
 
+data class ApiErrorResponseBody(
+    val error: String? = "Something went wrong",
+    val status: Int,
+)
+
 @ControllerAdvice
 class ApiExceptionHandler {
     @ExceptionHandler(NoSuchElementException::class)
