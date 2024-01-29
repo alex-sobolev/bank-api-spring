@@ -58,11 +58,11 @@ class AccountController(private val accountService: AccountService, private val 
         return ResponseEntity.ok(ApiAccount(account = account, customer = customer))
     }
 
-    @GetMapping("/customers/{customerId}")
+    @GetMapping("/search")
     fun getAccountsByCustomerId(
-        @PathVariable customerId: String,
+        @RequestParam(required = true) customerId: String,
     ): ResponseEntity<ApiCustomerAccountList> {
-        val customerId = UUID.fromString(customerId)
+        val customerId = parseUuidFromString(customerId, "Invalid customer id format: $customerId")
 
         val customer =
             customerService.getCustomer(customerId)
