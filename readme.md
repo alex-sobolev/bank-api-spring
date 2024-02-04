@@ -2,7 +2,7 @@
 
 This is a training project to learn how to implement backend by using Kotlin, Spring Boot and Postgresql.
 
-You will build a bank application in the end of this training. 
+You will build a bank application in the end of this training.
 
 A bank can have customers and accounts. A customer can have multiple accounts.
 
@@ -87,3 +87,25 @@ class HelloControllerTest(
     }
 }
 ```
+### Step-5
+
+Create customer table with Flyway migration.
+Add your SQL script to `/src/main/resources/db/migration/`, it will be executed during application startup.
+
+Use JOOQ to implement customer repository with following methods.
+- Create customer
+- Get customer by id
+- Get customers by name
+
+An example repository:
+```
+@Repository
+class CustomerRepository(private val context: DSLContext) {
+
+}
+```
+
+JOOQ classes are generated into `/build/generated-jooq/`.
+See JOOQ docs [here](https://www.jooq.org/doc/latest/manual/getting-started/jooq-and-kotlin/)
+
+**Note:** Uncomment `cleanUpDatabase` in `IntegrationBaseTest` after creating your first migration script, so that tables are cleaned up between integration tests.
