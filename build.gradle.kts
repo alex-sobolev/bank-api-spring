@@ -1,3 +1,4 @@
+import dev.monosoul.jooq.RecommendedVersions
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -6,6 +7,7 @@ plugins {
     kotlin("jvm") version "1.9.21"
     kotlin("plugin.spring") version "1.9.21"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
+    id("dev.monosoul.jooq-docker") version "6.0.3"
 }
 
 group = "com.wolt.wm.training"
@@ -26,7 +28,12 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")
-    runtimeOnly("org.postgresql:postgresql")
+    jooqCodegen("org.postgresql:postgresql:42.6.0")
+    runtimeOnly("org.postgresql:postgresql:42.6.0")
+    implementation("org.flywaydb:flyway-core:${RecommendedVersions.FLYWAY_VERSION}")
+    implementation("org.flywaydb:flyway-database-postgresql:${RecommendedVersions.FLYWAY_VERSION}")
+    implementation("org.jooq:jooq:${RecommendedVersions.JOOQ_VERSION}")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webflux")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
@@ -35,8 +42,13 @@ dependencies {
     testImplementation("org.testcontainers:postgresql")
 }
 
+val jooqGeneratedClassesDirName = "generated-jooq"
 ktlint {
     version.set("0.50.0")
+
+    filter {
+        exclude { it.file.path.contains("/$jooqGeneratedClassesDirName/") }
+    }
 }
 
 tasks.withType<KotlinCompile> {
@@ -48,4 +60,20 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+tasks {
+    generateJooqClasses {
+        withContainer {
+            image {
+                name = "postgres:15.2"
+            }
+        }
+        schemas.set(setOf("public"))
+        outputSchemaToDefault.set(setOf("public"))
+        basePackageName.set("com.wolt.wm.training.bank.db")
+        usingJavaConfig {
+            name = "org.jooq.codegen.KotlinGenerator"
+        }
+    }
 }
