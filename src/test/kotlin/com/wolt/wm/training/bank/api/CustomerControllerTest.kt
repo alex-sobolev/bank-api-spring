@@ -6,6 +6,8 @@ import com.wolt.wm.training.bank.customer.models.ApiCustomerListPage
 import com.wolt.wm.training.bank.customer.models.Customer
 import com.wolt.wm.training.bank.customer.models.CustomerRequest
 import io.kotest.matchers.shouldBe
+import org.jooq.impl.DSL.field
+import org.jooq.impl.DSL.table
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -22,6 +24,37 @@ class CustomerControllerTest(
 ) : IntegrationBaseTest() {
     @BeforeEach
     fun setUp() {
+        val customersTable = table("CUSTOMERS")
+        val testCustomer = expectedFirstCustomer.copy()
+
+        context.insertInto(
+            customersTable,
+            field("id"),
+            field("first_name"),
+            field("last_name"),
+            field("birthdate"),
+            field("gender"),
+            field("street_address"),
+            field("city"),
+            field("country"),
+            field("postal_code"),
+            field("email"),
+            field("phone"),
+        )
+            .values(
+                testCustomer.id,
+                testCustomer.firstName,
+                testCustomer.lastName,
+                testCustomer.birthdate,
+                testCustomer.gender,
+                testCustomer.address.street,
+                testCustomer.address.city,
+                testCustomer.address.country,
+                testCustomer.address.postalCode,
+                testCustomer.email,
+                testCustomer.phone,
+            )
+            .execute()
     }
 
     @AfterEach
@@ -31,20 +64,14 @@ class CustomerControllerTest(
     companion object {
         val expectedFirstCustomer =
             Customer(
-                id = UUID.fromString("7752c457-0f07-47d1-bc78-e714cceebed2"),
-                firstName = "Vonny",
-                lastName = "Dell Casa",
-                gender = "Female",
-                birthdate = LocalDate.parse("2004-01-21"),
-                email = "vdellcasa0@imageshack.us",
-                phone = "+351 491 936 1673",
-                address =
-                    Address(
-                        street = "41512 Clemons Pass",
-                        city = "Messejana",
-                        country = "Portugal",
-                        postalCode = "7600-314",
-                    ),
+                id = UUID.randomUUID(),
+                firstName = "Test",
+                lastName = "User",
+                birthdate = LocalDate.of(1990, 1, 1),
+                gender = "Male",
+                address = Address(street = "Test Street", city = "Test City", country = "Test Country", postalCode = "Test Postal Code"),
+                email = "test@example.com",
+                phone = "+49 123 4567 8900",
             )
 
         val newCustomerRequest =
@@ -80,7 +107,7 @@ class CustomerControllerTest(
 
         val actualFirstCustomer = res.customers[0]
 
-        res.customers.size shouldBe 50
+        res.customers.size shouldBe 1
         res.page shouldBe 1
         res.pageSize shouldBe 50
         actualFirstCustomer shouldBe expectedFirstCustomer
@@ -88,7 +115,7 @@ class CustomerControllerTest(
 
     @Test
     fun `get a customer by id`() {
-        val testCustomerId = UUID.fromString("7752c457-0f07-47d1-bc78-e714cceebed2")
+        val testCustomerId = expectedFirstCustomer.id
 
         val res =
             webTestClient.get()
