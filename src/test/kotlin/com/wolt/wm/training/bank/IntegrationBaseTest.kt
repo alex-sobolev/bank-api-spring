@@ -1,6 +1,8 @@
 package com.wolt.wm.training.bank
 
+import com.wolt.wm.training.bank.db.DefaultSchema.Companion.DEFAULT_SCHEMA
 import org.jooq.DSLContext
+import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
@@ -18,15 +20,14 @@ abstract class IntegrationBaseTest {
     @Autowired
     lateinit var context: DSLContext
 
-    // TODO Uncomment this after creating your first migration script
-    // @BeforeEach
-    // fun cleanUpDatabase() {
-    //     DEFAULT_SCHEMA.tables.map { table ->
-    //         context.truncate(table).cascade()
-    //     }.let {
-    //         context.batch(it).execute()
-    //     }
-    // }
+    @BeforeEach
+    fun cleanUpDatabase() {
+        DEFAULT_SCHEMA.tables.map { table ->
+            context.truncate(table).cascade()
+        }.let {
+            context.batch(it).execute()
+        }
+    }
 
     companion object {
         private val postgresqlContainer =

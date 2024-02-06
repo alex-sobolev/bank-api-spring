@@ -65,13 +65,13 @@ class CustomerController(private val customerService: CustomerService) {
 
     @GetMapping
     fun getCustomers(
-        @RequestParam query: String?,
+        @RequestParam name: String?,
         @RequestParam pageSize: Int?,
         @RequestParam page: Int?,
     ): ResponseEntity<ApiCustomerListPage> {
         val pageSize = pageSize ?: 50
         val page = page ?: 1
-        val customers = customerService.getCustomers(query = query, pageSize = pageSize, page = page)
+        val customers = customerService.getCustomers(name = name, pageSize = pageSize, page = page)
         val payload = ApiCustomerListPage(customers = customers, page = page, pageSize = pageSize)
 
         return ResponseEntity(payload, HttpStatus.OK)

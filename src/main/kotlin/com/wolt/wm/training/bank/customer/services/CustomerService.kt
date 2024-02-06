@@ -8,10 +8,10 @@ import java.util.UUID
 @Service
 class CustomerService(private val customerRepository: CustomerRepository) {
     fun getCustomers(
-        query: String?,
+        name: String?,
         pageSize: Int,
         page: Int,
-    ): List<Customer> = customerRepository.getCustomers(query = query, pageSize = pageSize, page = page)
+    ): List<Customer> = customerRepository.getCustomers(name = name, pageSize = pageSize, page = page)
 
     fun getCustomer(customerId: UUID): Customer? = customerRepository.getCustomer(customerId)
 
