@@ -13,7 +13,7 @@ class CustomerService(private val customerRepository: CustomerRepository) {
         page: Int,
     ): List<Customer> = customerRepository.getCustomers(name = name, pageSize = pageSize, page = page)
 
-    fun getCustomer(customerId: UUID): Customer? = customerRepository.getCustomer(customerId)
+    fun getCustomer(customerId: UUID): Customer? = customerRepository.findCustomer(customerId)
 
     fun createCustomer(customer: Customer) = customerRepository.createCustomer(customer)
 
