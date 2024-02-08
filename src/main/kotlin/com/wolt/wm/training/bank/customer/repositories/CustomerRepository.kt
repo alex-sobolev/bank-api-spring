@@ -10,11 +10,7 @@ import java.util.UUID
 
 @Repository
 class CustomerRepository(private val ctx: DSLContext) {
-    companion object {
-        val customersTable = CUSTOMERS
-    }
-
-    private fun CustomersRecord.mapRecordToCustomer(): Customer {
+    private fun CustomersRecord.intoCustomer(): Customer {
         return Customer(
             id = id!!,
             firstName = firstName!!,
@@ -33,53 +29,6 @@ class CustomerRepository(private val ctx: DSLContext) {
         )
     }
 
-    fun getCustomers(
-        name: String?,
-        pageSize: Int,
-        page: Int,
-    ): List<Customer> {
-        val offset = (page - 1) * pageSize
-        val limit = pageSize
-        val query = ctx.selectFrom(CUSTOMERS)
-
-        if (!name.isNullOrBlank()) {
-            query.where(
-                CUSTOMERS.FIRST_NAME.contains(name)
-                    .or(CUSTOMERS.LAST_NAME.contains(name))
-                    .or(CUSTOMERS.FIRST_NAME.concat(" ").concat(CUSTOMERS.LAST_NAME).contains(name))
-                    .or(CUSTOMERS.LAST_NAME.concat(" ").concat(CUSTOMERS.FIRST_NAME).contains(name)),
-            )
-        }
-
-        query.limit(limit).offset(offset)
-
-        val result = query.fetch()
-
-        return result.map { it.mapRecordToCustomer() }
-    }
-
-    fun findCustomer(customerId: UUID): Customer? {
-        val record =
-            ctx.selectFrom(CUSTOMERS).where(CUSTOMERS.ID.eq(customerId)).fetchOne()
-                ?: return null
-
-        return record.mapRecordToCustomer()
-    }
-
-    fun createCustomer(customer: Customer): Customer {
-        val result =
-            ctx.insertInto(
-                CUSTOMERS,
-            )
-                .set(
-                    customer.intoRecord(),
-                )
-                .returning()
-                .fetchOne()
-
-        return result!!.mapRecordToCustomer()
-    }
-
     private fun Customer.intoRecord(): CustomersRecord {
         return CustomersRecord().also {
             it.id = id
@@ -94,6 +43,48 @@ class CustomerRepository(private val ctx: DSLContext) {
             it.email = email
             it.phone = phone
         }
+    }
+
+    fun getCustomers(
+        name: String?,
+        pageSize: Int,
+        page: Int,
+    ): List<Customer> {
+        val offset = (page - 1) * pageSize
+        val limit = pageSize
+        val query = ctx.selectFrom(CUSTOMERS)
+
+        if (!name.isNullOrBlank()) {
+            query.where(
+                CUSTOMERS.FIRST_NAME.contains(name)
+                    .or(CUSTOMERS.LAST_NAME.contains(name))
+                    .or(CUSTOMERS.FIRST_NAME.concat(" ").concat(CUSTOMERS.LAST_NAME).contains(name)),
+            )
+        }
+
+        query.limit(limit).offset(offset)
+
+        val result = query.fetch()
+
+        return result.map { it.intoCustomer() }
+    }
+
+    fun findCustomer(customerId: UUID): Customer? {
+        val record =
+            ctx.selectFrom(CUSTOMERS).where(CUSTOMERS.ID.eq(customerId)).fetchOne()
+                ?: return null
+
+        return record.intoCustomer()
+    }
+
+    fun createCustomer(customer: Customer): Customer {
+        val result =
+            ctx.insertInto(CUSTOMERS)
+                .set(customer.intoRecord())
+                .returning()
+                .fetchOne()
+
+        return result!!.intoCustomer()
     }
 
     fun updateCustomer(customer: Customer) {
