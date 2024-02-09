@@ -5,9 +5,8 @@ import com.wolt.wm.training.bank.customer.models.Address
 import com.wolt.wm.training.bank.customer.models.ApiCustomerListPage
 import com.wolt.wm.training.bank.customer.models.Customer
 import com.wolt.wm.training.bank.customer.models.CustomerRequest
+import com.wolt.wm.training.bank.db.tables.references.CUSTOMERS
 import io.kotest.matchers.shouldBe
-import org.jooq.impl.DSL.field
-import org.jooq.impl.DSL.table
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -24,22 +23,21 @@ class CustomerControllerTest(
 ) : IntegrationBaseTest() {
     @BeforeEach
     fun setUp() {
-        val customersTable = table("CUSTOMERS")
         val testCustomer = expectedFirstCustomer.copy()
 
         context.insertInto(
-            customersTable,
-            field("id"),
-            field("first_name"),
-            field("last_name"),
-            field("birthdate"),
-            field("gender"),
-            field("street_address"),
-            field("city"),
-            field("country"),
-            field("postal_code"),
-            field("email"),
-            field("phone"),
+            CUSTOMERS,
+            CUSTOMERS.ID,
+            CUSTOMERS.FIRST_NAME,
+            CUSTOMERS.LAST_NAME,
+            CUSTOMERS.BIRTHDATE,
+            CUSTOMERS.GENDER,
+            CUSTOMERS.STREET_ADDRESS,
+            CUSTOMERS.CITY,
+            CUSTOMERS.COUNTRY,
+            CUSTOMERS.POSTAL_CODE,
+            CUSTOMERS.EMAIL,
+            CUSTOMERS.PHONE,
         )
             .values(
                 testCustomer.id,
