@@ -2,15 +2,15 @@ package com.wolt.wm.training.bank.customer.repositories
 
 import com.wolt.wm.training.bank.customer.models.Address
 import com.wolt.wm.training.bank.customer.models.Customer
-import com.wolt.wm.training.bank.db.tables.records.CustomersRecord
-import com.wolt.wm.training.bank.db.tables.references.CUSTOMERS
+import com.wolt.wm.training.bank.db.tables.records.CustomerRecord
+import com.wolt.wm.training.bank.db.tables.references.CUSTOMER
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
 class CustomerRepository(private val ctx: DSLContext) {
-    private fun CustomersRecord.intoCustomer(): Customer {
+    private fun CustomerRecord.intoCustomer(): Customer {
         return Customer(
             id = id!!,
             firstName = firstName!!,
@@ -29,8 +29,8 @@ class CustomerRepository(private val ctx: DSLContext) {
         )
     }
 
-    private fun Customer.intoRecord(): CustomersRecord {
-        return CustomersRecord().also {
+    private fun Customer.intoRecord(): CustomerRecord {
+        return CustomerRecord().also {
             it.id = id
             it.firstName = firstName
             it.lastName = lastName
@@ -52,13 +52,13 @@ class CustomerRepository(private val ctx: DSLContext) {
     ): List<Customer> {
         val offset = (page - 1) * pageSize
         val limit = pageSize
-        val query = ctx.selectFrom(CUSTOMERS)
+        val query = ctx.selectFrom(CUSTOMER)
 
         if (!name.isNullOrBlank()) {
             query.where(
-                CUSTOMERS.FIRST_NAME.contains(name)
-                    .or(CUSTOMERS.LAST_NAME.contains(name))
-                    .or(CUSTOMERS.FIRST_NAME.concat(" ").concat(CUSTOMERS.LAST_NAME).contains(name)),
+                CUSTOMER.FIRST_NAME.contains(name)
+                    .or(CUSTOMER.LAST_NAME.contains(name))
+                    .or(CUSTOMER.FIRST_NAME.concat(" ").concat(CUSTOMER.LAST_NAME).contains(name)),
             )
         }
 
@@ -71,7 +71,7 @@ class CustomerRepository(private val ctx: DSLContext) {
 
     fun findCustomer(customerId: UUID): Customer? {
         val record =
-            ctx.selectFrom(CUSTOMERS).where(CUSTOMERS.ID.eq(customerId)).fetchOne()
+            ctx.selectFrom(CUSTOMER).where(CUSTOMER.ID.eq(customerId)).fetchOne()
                 ?: return null
 
         return record.intoCustomer()
@@ -79,7 +79,7 @@ class CustomerRepository(private val ctx: DSLContext) {
 
     fun createCustomer(customer: Customer): Customer {
         val result =
-            ctx.insertInto(CUSTOMERS)
+            ctx.insertInto(CUSTOMER)
                 .set(customer.intoRecord())
                 .returning()
                 .fetchOne()
@@ -88,15 +88,15 @@ class CustomerRepository(private val ctx: DSLContext) {
     }
 
     fun updateCustomer(customer: Customer) {
-        ctx.update(CUSTOMERS)
+        ctx.update(CUSTOMER)
             .set(customer.intoRecord())
-            .where(CUSTOMERS.ID.eq(customer.id))
+            .where(CUSTOMER.ID.eq(customer.id))
             .execute()
     }
 
     fun deleteCustomer(customerId: UUID) {
-        ctx.deleteFrom(CUSTOMERS)
-            .where(CUSTOMERS.ID.eq(customerId))
+        ctx.deleteFrom(CUSTOMER)
+            .where(CUSTOMER.ID.eq(customerId))
             .execute()
     }
 }
