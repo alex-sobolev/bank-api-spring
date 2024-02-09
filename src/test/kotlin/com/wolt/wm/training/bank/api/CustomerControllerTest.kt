@@ -5,7 +5,7 @@ import com.wolt.wm.training.bank.customer.models.Address
 import com.wolt.wm.training.bank.customer.models.ApiCustomerListPage
 import com.wolt.wm.training.bank.customer.models.Customer
 import com.wolt.wm.training.bank.customer.models.CustomerRequest
-import com.wolt.wm.training.bank.db.tables.references.CUSTOMERS
+import com.wolt.wm.training.bank.db.tables.references.CUSTOMER
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -26,18 +26,18 @@ class CustomerControllerTest(
         val testCustomer = expectedFirstCustomer.copy()
 
         context.insertInto(
-            CUSTOMERS,
-            CUSTOMERS.ID,
-            CUSTOMERS.FIRST_NAME,
-            CUSTOMERS.LAST_NAME,
-            CUSTOMERS.BIRTHDATE,
-            CUSTOMERS.GENDER,
-            CUSTOMERS.STREET_ADDRESS,
-            CUSTOMERS.CITY,
-            CUSTOMERS.COUNTRY,
-            CUSTOMERS.POSTAL_CODE,
-            CUSTOMERS.EMAIL,
-            CUSTOMERS.PHONE,
+            CUSTOMER,
+            CUSTOMER.ID,
+            CUSTOMER.FIRST_NAME,
+            CUSTOMER.LAST_NAME,
+            CUSTOMER.BIRTHDATE,
+            CUSTOMER.GENDER,
+            CUSTOMER.STREET_ADDRESS,
+            CUSTOMER.CITY,
+            CUSTOMER.COUNTRY,
+            CUSTOMER.POSTAL_CODE,
+            CUSTOMER.EMAIL,
+            CUSTOMER.PHONE,
         )
             .values(
                 testCustomer.id,
