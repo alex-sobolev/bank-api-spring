@@ -87,11 +87,15 @@ class CustomerRepository(private val ctx: DSLContext) {
         return result!!.intoCustomer()
     }
 
-    fun updateCustomer(customer: Customer) {
-        ctx.update(CUSTOMER)
-            .set(customer.intoRecord())
-            .where(CUSTOMER.ID.eq(customer.id))
-            .execute()
+    fun updateCustomer(customer: Customer): Customer {
+        val result =
+            ctx.update(CUSTOMER)
+                .set(customer.intoRecord())
+                .where(CUSTOMER.ID.eq(customer.id))
+                .returning()
+                .fetchOne()
+
+        return result!!.intoCustomer()
     }
 
     fun deleteCustomer(customerId: UUID) {
