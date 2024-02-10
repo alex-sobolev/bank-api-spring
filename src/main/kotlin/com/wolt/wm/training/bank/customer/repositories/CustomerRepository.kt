@@ -18,12 +18,12 @@ class CustomerRepository(private val ctx: DSLContext) {
             birthdate = birthdate!!,
             gender = gender,
             address =
-                Address(
-                    street = streetAddress!!,
-                    city = city!!,
-                    country = country!!,
-                    postalCode = postalCode,
-                ),
+            Address(
+                street = streetAddress!!,
+                city = city!!,
+                country = country!!,
+                postalCode = postalCode,
+            ),
             email = email,
             phone = phone,
         )
