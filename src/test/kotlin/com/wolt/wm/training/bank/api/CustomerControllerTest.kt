@@ -23,36 +23,6 @@ class CustomerControllerTest(
 ) : IntegrationBaseTest() {
     @BeforeEach
     fun setUp() {
-        val testCustomer = expectedFirstCustomer.copy()
-
-        context.insertInto(
-            CUSTOMER,
-            CUSTOMER.ID,
-            CUSTOMER.FIRST_NAME,
-            CUSTOMER.LAST_NAME,
-            CUSTOMER.BIRTHDATE,
-            CUSTOMER.GENDER,
-            CUSTOMER.STREET_ADDRESS,
-            CUSTOMER.CITY,
-            CUSTOMER.COUNTRY,
-            CUSTOMER.POSTAL_CODE,
-            CUSTOMER.EMAIL,
-            CUSTOMER.PHONE,
-        )
-            .values(
-                testCustomer.id,
-                testCustomer.firstName,
-                testCustomer.lastName,
-                testCustomer.birthdate,
-                testCustomer.gender,
-                testCustomer.address.street,
-                testCustomer.address.city,
-                testCustomer.address.country,
-                testCustomer.address.postalCode,
-                testCustomer.email,
-                testCustomer.phone,
-            )
-            .execute()
     }
 
     @AfterEach
@@ -79,19 +49,37 @@ class CustomerControllerTest(
                 birthdate = LocalDate.of(1990, 1, 1),
                 gender = "Male",
                 address =
-                Address(
-                    street = "123 Test Street",
-                    city = "Test City",
-                    country = "Test Country",
-                    postalCode = "12345",
-                ),
+                    Address(
+                        street = "123 Test Street",
+                        city = "Test City",
+                        country = "Test Country",
+                        postalCode = "12345",
+                    ),
                 email = "john.doe@example.com",
                 phone = "+123 456 7890",
             )
     }
 
+    private fun addCustomerToDB(customer: Customer) {
+        context.insertInto(CUSTOMER)
+            .set(CUSTOMER.ID, customer.id)
+            .set(CUSTOMER.FIRST_NAME, customer.firstName)
+            .set(CUSTOMER.LAST_NAME, customer.lastName)
+            .set(CUSTOMER.BIRTHDATE, customer.birthdate)
+            .set(CUSTOMER.GENDER, customer.gender)
+            .set(CUSTOMER.STREET_ADDRESS, customer.address.street)
+            .set(CUSTOMER.CITY, customer.address.city)
+            .set(CUSTOMER.COUNTRY, customer.address.country)
+            .set(CUSTOMER.POSTAL_CODE, customer.address.postalCode)
+            .set(CUSTOMER.EMAIL, customer.email)
+            .set(CUSTOMER.PHONE, customer.phone)
+            .execute()
+    }
+
     @Test
     fun `get customer list`() {
+        addCustomerToDB(expectedFirstCustomer)
+
         val res =
             webTestClient.get()
                 .uri("/api/customers")
@@ -113,6 +101,8 @@ class CustomerControllerTest(
 
     @Test
     fun `get a customer by id`() {
+        addCustomerToDB(expectedFirstCustomer)
+
         val testCustomerId = expectedFirstCustomer.id
 
         val res =

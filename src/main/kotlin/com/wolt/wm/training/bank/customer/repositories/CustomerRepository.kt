@@ -10,7 +10,7 @@ import java.util.UUID
 
 @Repository
 class CustomerRepository(private val ctx: DSLContext) {
-    private fun CustomerRecord.intoCustomer(): Customer {
+    fun CustomerRecord.toDomain(): Customer {
         return Customer(
             id = id!!,
             firstName = firstName!!,
@@ -18,18 +18,18 @@ class CustomerRepository(private val ctx: DSLContext) {
             birthdate = birthdate!!,
             gender = gender,
             address =
-            Address(
-                street = streetAddress!!,
-                city = city!!,
-                country = country!!,
-                postalCode = postalCode,
-            ),
+                Address(
+                    street = streetAddress!!,
+                    city = city!!,
+                    country = country!!,
+                    postalCode = postalCode,
+                ),
             email = email,
             phone = phone,
         )
     }
 
-    private fun Customer.intoRecord(): CustomerRecord {
+    fun Customer.toRecord(): CustomerRecord {
         return CustomerRecord().also {
             it.id = id
             it.firstName = firstName
@@ -66,7 +66,7 @@ class CustomerRepository(private val ctx: DSLContext) {
 
         val result = query.fetch()
 
-        return result.map { it.intoCustomer() }
+        return result.map { it.toDomain() }
     }
 
     fun findCustomer(customerId: UUID): Customer? {
@@ -74,28 +74,28 @@ class CustomerRepository(private val ctx: DSLContext) {
             ctx.selectFrom(CUSTOMER).where(CUSTOMER.ID.eq(customerId)).fetchOne()
                 ?: return null
 
-        return record.intoCustomer()
+        return record.toDomain()
     }
 
     fun createCustomer(customer: Customer): Customer {
         val result =
             ctx.insertInto(CUSTOMER)
-                .set(customer.intoRecord())
+                .set(customer.toRecord())
                 .returning()
                 .fetchOne()
 
-        return result!!.intoCustomer()
+        return result!!.toDomain()
     }
 
     fun updateCustomer(customer: Customer): Customer {
         val result =
             ctx.update(CUSTOMER)
-                .set(customer.intoRecord())
+                .set(customer.toRecord())
                 .where(CUSTOMER.ID.eq(customer.id))
                 .returning()
                 .fetchOne()
 
-        return result!!.intoCustomer()
+        return result!!.toDomain()
     }
 
     fun deleteCustomer(customerId: UUID) {

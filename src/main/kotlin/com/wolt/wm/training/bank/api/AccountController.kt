@@ -31,13 +31,12 @@ import java.util.UUID
 class AccountController(private val accountService: AccountService, private val customerService: CustomerService) {
     @GetMapping
     fun getAccounts(
-        @RequestParam query: String?,
         @RequestParam pageSize: Int?,
         @RequestParam page: Int?,
     ): ResponseEntity<ApiAccountListPage> {
         val page = page ?: 1
         val pageSize = pageSize ?: 50
-        val accounts = accountService.getAccounts(query = query, pageSize = pageSize, page = page)
+        val accounts = accountService.getAccounts(pageSize = pageSize, page = page)
 
         return ResponseEntity.ok(ApiAccountListPage(accounts = accounts, page = page, pageSize = pageSize))
     }

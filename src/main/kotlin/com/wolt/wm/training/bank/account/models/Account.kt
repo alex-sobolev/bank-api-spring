@@ -3,7 +3,7 @@ package com.wolt.wm.training.bank.account.models
 import com.wolt.wm.training.bank.customer.models.Customer
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 enum class AccountType {
     SAVINGS,
