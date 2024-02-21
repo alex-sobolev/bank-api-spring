@@ -33,6 +33,8 @@ dependencies {
     implementation("org.flywaydb:flyway-core:${RecommendedVersions.FLYWAY_VERSION}")
     implementation("org.flywaydb:flyway-database-postgresql:${RecommendedVersions.FLYWAY_VERSION}")
     implementation("org.jooq:jooq:${RecommendedVersions.JOOQ_VERSION}")
+    implementation("io.arrow-kt:arrow-core:1.2.0")
+    implementation("io.arrow-kt:arrow-fx-coroutines:1.2.0")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webflux")

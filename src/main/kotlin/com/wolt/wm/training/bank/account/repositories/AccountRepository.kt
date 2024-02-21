@@ -1,63 +1,77 @@
 package com.wolt.wm.training.bank.account.repositories
 
 import com.wolt.wm.training.bank.account.models.Account
+import com.wolt.wm.training.bank.account.models.AccountStatus
+import com.wolt.wm.training.bank.account.models.AccountType
+import com.wolt.wm.training.bank.account.models.Currency
+import com.wolt.wm.training.bank.db.tables.records.AccountRecord
+import com.wolt.wm.training.bank.db.tables.references.ACCOUNT
+import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
-class AccountRepository {
-    private val accounts: MutableList<Account> = mutableListOf()
+class AccountRepository(private val ctx: DSLContext) {
+    private fun AccountRecord.toDomain(): Account =
+        Account(
+            id = id!!,
+            customerId = customerId!!,
+            balance = balance!!,
+            currency = Currency.valueOf(currency!!),
+            type = AccountType.valueOf(type!!),
+            status = AccountStatus.valueOf(status!!),
+            createdAt = createdAt!!,
+            updatedAt = updatedAt,
+        )
+
+    private fun Account.toRecord(): AccountRecord =
+        AccountRecord().also {
+            it.id = id
+            it.customerId = customerId
+            it.balance = balance
+            it.currency = currency.name
+            it.type = type.name
+            it.status = status.name
+            it.createdAt = createdAt
+            it.updatedAt = updatedAt
+        }
 
     fun getAccounts(
-        query: String?,
         pageSize: Int,
         page: Int,
     ): List<Account> {
         val offset = (page - 1) * pageSize
+        val query = ctx.selectFrom(ACCOUNT).offset(offset).limit(pageSize)
+        val records = query.fetch()
 
-        val filteredAccounts =
-            when {
-                query.isNullOrBlank() -> accounts
-                else ->
-                    accounts.filter {
-                        it.id.toString().contains(query, ignoreCase = true) ||
-                            it.customerId.toString().contains(query, ignoreCase = true) ||
-                            it.balance.toString().contains(query, ignoreCase = true) ||
-                            it.currency.toString().contains(query, ignoreCase = true)
-                    }
-            }
-
-        return when {
-            filteredAccounts.size >= offset + pageSize -> filteredAccounts.subList(offset, offset + pageSize)
-            filteredAccounts.size - offset > 0 -> filteredAccounts.subList(offset, filteredAccounts.size)
-            else -> emptyList()
-        }
+        return records.map { it.toDomain() }
     }
 
     fun getAccountsByCustomerId(customerId: UUID): List<Account> {
-        return accounts.filter { it.customerId == customerId }
+        val accountRecords = ctx.selectFrom(ACCOUNT).where(ACCOUNT.CUSTOMER_ID.eq(customerId)).fetch()
+
+        return accountRecords.map { it.toDomain() }
     }
 
-    fun getAccount(accountId: UUID): Account? {
-        return accounts.find { it.id == accountId }
+    fun findAccount(accountId: UUID): Account? {
+        val record = ctx.selectFrom(ACCOUNT).where(ACCOUNT.ID.eq(accountId)).fetchOne() ?: return null
+
+        return record.toDomain()
     }
 
-    fun createAccount(account: Account) {
-        accounts.add(account)
+    fun createAccount(account: Account): Account {
+        val record = ctx.insertInto(ACCOUNT).set(account.toRecord()).returning().fetchOne()
+
+        return record!!.toDomain()
     }
 
-    fun updateAccount(account: Account) {
-        val prev = accounts.find { it.id == account.id }
-        accounts.remove(prev)
-        accounts.add(account)
+    fun updateAccount(account: Account): Account {
+        val record = ctx.update(ACCOUNT).set(account.toRecord()).where(ACCOUNT.ID.eq(account.id)).returning().fetchOne()
+
+        return record!!.toDomain()
     }
 
     fun deleteAccount(accountId: UUID) {
-        val account = accounts.find { it.id == accountId }
-        accounts.remove(account)
-    }
-
-    fun deleteAllAccounts() {
-        accounts.clear()
+        ctx.deleteFrom(ACCOUNT).where(ACCOUNT.ID.eq(accountId)).execute()
     }
 }

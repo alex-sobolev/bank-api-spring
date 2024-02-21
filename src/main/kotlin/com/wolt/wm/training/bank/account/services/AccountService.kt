@@ -8,14 +8,13 @@ import java.util.UUID
 @Service
 class AccountService(private val accountRepository: AccountRepository) {
     fun getAccounts(
-        query: String?,
         pageSize: Int,
         page: Int,
-    ) = accountRepository.getAccounts(query = query, pageSize = pageSize, page = page)
+    ) = accountRepository.getAccounts(pageSize = pageSize, page = page)
 
     fun getAccountsByCustomerId(customerId: UUID): List<Account> = accountRepository.getAccountsByCustomerId(customerId)
 
-    fun getAccount(accountId: UUID): Account? = accountRepository.getAccount(accountId)
+    fun getAccount(accountId: UUID): Account? = accountRepository.findAccount(accountId)
 
     fun createAccount(account: Account) = accountRepository.createAccount(account)
 

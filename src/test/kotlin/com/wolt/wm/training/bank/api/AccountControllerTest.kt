@@ -9,7 +9,9 @@ import com.wolt.wm.training.bank.account.models.ApiAccountListPage
 import com.wolt.wm.training.bank.account.models.ApiCustomerAccountList
 import com.wolt.wm.training.bank.account.models.CreateAccountRequest
 import com.wolt.wm.training.bank.account.models.Currency
-import com.wolt.wm.training.bank.account.repositories.AccountRepository
+import com.wolt.wm.training.bank.customer.models.Address
+import com.wolt.wm.training.bank.customer.models.Customer
+import com.wolt.wm.training.bank.db.tables.references.CUSTOMER
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -17,11 +19,12 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import java.math.BigDecimal
+import java.time.LocalDate
 import java.util.UUID
 
 class AccountControllerTest(
     @Autowired private val webTestClient: WebTestClient,
-    @Autowired private val accountRepository: AccountRepository,
 ) : IntegrationBaseTest() {
     @BeforeEach
     fun setUp() {
@@ -29,11 +32,28 @@ class AccountControllerTest(
 
     @AfterEach
     fun tearDown() {
-        accountRepository.deleteAllAccounts()
     }
 
     companion object {
         val customerId: UUID = UUID.fromString("7752c457-0f07-47d1-bc78-e714cceebed2")
+
+        val newCustomer =
+            Customer(
+                id = customerId,
+                firstName = "John",
+                lastName = "Doe",
+                birthdate = LocalDate.of(1990, 1, 1),
+                gender = "Male",
+                address =
+                    Address(
+                        street = "123 Test Street",
+                        city = "Test City",
+                        country = "Test Country",
+                        postalCode = "12345",
+                    ),
+                email = "john.doe@example.com",
+                phone = "+123 456 7890",
+            )
 
         val createAccountRequest =
             CreateAccountRequest(
@@ -43,6 +63,22 @@ class AccountControllerTest(
             )
 
         val notFoundUuid: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
+    }
+
+    private fun addNewCustomer(customer: Customer) {
+        context.insertInto(CUSTOMER)
+            .set(CUSTOMER.ID, customer.id)
+            .set(CUSTOMER.FIRST_NAME, customer.firstName)
+            .set(CUSTOMER.LAST_NAME, customer.lastName)
+            .set(CUSTOMER.BIRTHDATE, customer.birthdate)
+            .set(CUSTOMER.GENDER, customer.gender)
+            .set(CUSTOMER.STREET_ADDRESS, customer.address.street)
+            .set(CUSTOMER.CITY, customer.address.city)
+            .set(CUSTOMER.COUNTRY, customer.address.country)
+            .set(CUSTOMER.POSTAL_CODE, customer.address.postalCode)
+            .set(CUSTOMER.EMAIL, customer.email)
+            .set(CUSTOMER.PHONE, customer.phone)
+            .execute()
     }
 
     private fun getAccountsList(): ApiAccountListPage =
@@ -108,6 +144,9 @@ class AccountControllerTest(
         initialRes.accounts shouldBe emptyList()
         initialRes.page shouldBe 1
 
+        // Add customer to Customer table
+        addNewCustomer(newCustomer)
+
         // Add an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
@@ -123,6 +162,9 @@ class AccountControllerTest(
 
     @Test
     fun `get account by id`() {
+        // Add customer to Customer table
+        addNewCustomer(newCustomer)
+
         // Add an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
@@ -145,6 +187,9 @@ class AccountControllerTest(
 
     @Test
     fun `get accounts by customer id`() {
+        // Add customer to Customer table
+        addNewCustomer(newCustomer)
+
         // Add an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
@@ -176,6 +221,9 @@ class AccountControllerTest(
 
     @Test
     fun `create an account`() {
+        // Add customer to Customer table
+        addNewCustomer(newCustomer)
+
         // Add an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
@@ -191,6 +239,9 @@ class AccountControllerTest(
 
     @Test
     fun `delete an existing account`() {
+        // Add customer to Customer table
+        addNewCustomer(newCustomer)
+
         // Add an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
@@ -228,6 +279,9 @@ class AccountControllerTest(
 
     @Test
     fun `deposit money to an account`() {
+        // Add customer to Customer table
+        addNewCustomer(newCustomer)
+
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
@@ -245,7 +299,7 @@ class AccountControllerTest(
 
         val res = depositMoney(depositMoneyRequest)
 
-        res.account.balance shouldBe 100.toBigDecimal()
+        res.account.balance shouldBe BigDecimal("100.00")
         res.account.currency shouldBe createAccountRequest.currency
     }
 
@@ -268,6 +322,9 @@ class AccountControllerTest(
 
     @Test
     fun `deposit money with a negative amount`() {
+        // Add customer to Customer table
+        addNewCustomer(newCustomer)
+
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
@@ -293,6 +350,9 @@ class AccountControllerTest(
 
     @Test
     fun `deposit money with 0 amount`() {
+        // Add customer to Customer table
+        addNewCustomer(newCustomer)
+
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
@@ -318,6 +378,9 @@ class AccountControllerTest(
 
     @Test
     fun `deposit money with a different currency`() {
+        // Add customer to Customer table
+        addNewCustomer(newCustomer)
+
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
@@ -343,6 +406,9 @@ class AccountControllerTest(
 
     @Test
     fun `withdraw money from an account`() {
+        // Add customer to Customer table
+        addNewCustomer(newCustomer)
+
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
@@ -358,7 +424,7 @@ class AccountControllerTest(
         val depositMoneyRes = depositMoney(depositMoneyRequest)
 
         depositMoneyRes.account.currency shouldBe createAccountRequest.currency
-        depositMoneyRes.account.balance shouldBe 100.toBigDecimal()
+        depositMoneyRes.account.balance shouldBe BigDecimal("100.00")
 
         // withdraw money
         val withdrawMoneyRequest =
@@ -370,7 +436,7 @@ class AccountControllerTest(
 
         val withdrawMoneyRes = withdrawMoney(withdrawMoneyRequest)
 
-        withdrawMoneyRes.account.balance shouldBe 50.toBigDecimal()
+        withdrawMoneyRes.account.balance shouldBe BigDecimal("50.00")
     }
 
     @Test
@@ -392,6 +458,9 @@ class AccountControllerTest(
 
     @Test
     fun `withdraw money with a negative amount`() {
+        // Add customer to Customer table
+        addNewCustomer(newCustomer)
+
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
@@ -413,6 +482,9 @@ class AccountControllerTest(
 
     @Test
     fun `withdraw money with 0 amount`() {
+        // Add customer to Customer table
+        addNewCustomer(newCustomer)
+
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
@@ -438,6 +510,9 @@ class AccountControllerTest(
 
     @Test
     fun `withdraw money with a different currency`() {
+        // Add customer to Customer table
+        addNewCustomer(newCustomer)
+
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
@@ -463,6 +538,9 @@ class AccountControllerTest(
 
     @Test
     fun `withdraw more money than account balance`() {
+        // Add customer to Customer table
+        addNewCustomer(newCustomer)
+
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
@@ -478,7 +556,7 @@ class AccountControllerTest(
         val depositMoneyRes = depositMoney(depositMoneyRequest)
 
         depositMoneyRes.account.currency shouldBe createAccountRequest.currency
-        depositMoneyRes.account.balance shouldBe 100.toBigDecimal()
+        depositMoneyRes.account.balance shouldBe BigDecimal("100.00")
 
         // withdraw money
         val withdrawMoneyRequest =
