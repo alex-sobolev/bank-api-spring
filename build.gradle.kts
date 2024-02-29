@@ -10,7 +10,7 @@ plugins {
     id("dev.monosoul.jooq-docker") version "6.0.3"
 }
 
-group = "com.wolt.wm.training"
+group = "io.alex"
 version = "0.0.1-SNAPSHOT"
 
 java {
@@ -74,7 +74,7 @@ tasks {
         }
         schemas.set(setOf("public"))
         outputSchemaToDefault.set(setOf("public"))
-        basePackageName.set("com.wolt.wm.training.bank.db")
+        basePackageName.set("io.alex.bank.db")
         usingJavaConfig {
             name = "org.jooq.codegen.KotlinGenerator"
         }
