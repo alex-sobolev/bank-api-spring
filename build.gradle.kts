@@ -10,7 +10,7 @@ plugins {
     id("dev.monosoul.jooq-docker") version "6.0.3"
 }
 
-group = "com.wolt.wm.training"
+group = "io.alex"
 version = "0.0.1-SNAPSHOT"
 
 java {
