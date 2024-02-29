@@ -109,3 +109,48 @@ JOOQ classes are generated into `/build/generated-jooq/`.
 See JOOQ docs [here](https://www.jooq.org/doc/latest/manual/getting-started/jooq-and-kotlin/)
 
 **Note:** Uncomment `cleanUpDatabase` in `IntegrationBaseTest` after creating your first migration script, so that tables are cleaned up between integration tests.
+
+### Step-6
+
+Create account table with Flyway migration
+
+Use JOOQ to implement account repository with following methods.
+
+- Create an account
+- Get accounts by customer id
+- Deposit money to an account
+- Withdraw money from an account
+
+Relationships
+- Customer id should exist in Customer table
+
+**Note:** Check how foreign keys works in Postgresql [here](https://www.postgresql.org/docs/current/tutorial-fk.html)
+
+### Step-7
+
+Write unit tests for your service. With unit tests, you can test your business logic isolated from external dependencies which would run faster than integration tests.
+
+Use [mockk](https://mockk.io/) to mock the dependencies.
+
+
+```kotlin
+class ExampleServiceTest() {
+
+    private val exampleRepository: ExampleRepository = mockk()
+    val exampleService = ExampleService(exampleRepository)
+
+    fun `test example`() {
+        // Given
+        every { exampleRepository.get() } returns Example("some example")
+
+        ...
+    }
+}
+```
+
+**Bonus:** Consider using `value` class for domain model ids, so that we can leverage more from compile time type check.
+```kotlin
+@JvmInline
+value class AccountId(val value: String)
+```
+See the value class docs [here](https://kotlinlang.org/docs/inline-classes.html).
