@@ -260,12 +260,11 @@ class AccountControllerTest(
             .expectStatus().isNoContent
 
         // Check that the account is deleted
-        val res =
-            webTestClient.get()
-                .uri("/api/accounts/$accountId")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isNotFound
+        webTestClient.get()
+            .uri("/api/accounts/$accountId")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isNotFound
     }
 
     @Test
