@@ -67,7 +67,7 @@ Account validations
 - Withdraw amount should be less or equal to the account balance
 - Withdraw currency should be same as account currency
 
-### Step-4
+#### Step-4
 
 Test the validations that you have implemented in Step-3.
 
@@ -87,7 +87,7 @@ class HelloControllerTest(
     }
 }
 ```
-### Step-5
+#### Step-5
 
 Create customer table with Flyway migration.
 Add your SQL script to `/src/main/resources/db/migration/`, it will be executed during application startup.
@@ -110,7 +110,7 @@ See JOOQ docs [here](https://www.jooq.org/doc/latest/manual/getting-started/jooq
 
 **Note:** Uncomment `cleanUpDatabase` in `IntegrationBaseTest` after creating your first migration script, so that tables are cleaned up between integration tests.
 
-### Step-6
+#### Step-6
 
 Create account table with Flyway migration
 
@@ -126,7 +126,7 @@ Relationships
 
 **Note:** Check how foreign keys works in Postgresql [here](https://www.postgresql.org/docs/current/tutorial-fk.html)
 
-### Step-7
+#### Step-7
 
 Write unit tests for your service. With unit tests, you can test your business logic isolated from external dependencies which would run faster than integration tests.
 
@@ -154,3 +154,20 @@ class ExampleServiceTest() {
 value class AccountId(val value: String)
 ```
 See the value class docs [here](https://kotlinlang.org/docs/inline-classes.html).
+
+#### Step-8
+
+We got a feedback from users that when they search with customer name that it takes too long.
+Try to improve search by customer name by using index.
+
+Consider using GIN index explained [here](https://www.postgresql.org/docs/9.1/textsearch-indexes.html)
+
+Use `explain analyze` to check the execution plan for your query.
+See https://www.postgresql.org/docs/current/using-explain.html#USING-EXPLAIN-ANALYZE
+
+To generate data for your `Customer` table you can use [mockaroo](https://www.mockaroo.com/):
+1. Add your table fields with related types for them;
+2. Specify how many rows of data you need (max: 1000 row);
+3. Select format to `SQL`
+4. Add your table name (`CUSTOMER`)
+5. Click on `Generate Data` button.
