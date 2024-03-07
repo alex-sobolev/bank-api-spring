@@ -36,6 +36,19 @@ class AccountRepository(private val ctx: DSLContext) {
             it.updatedAt = updatedAt
         }
 
+    private fun upsertAccount(account: Account): Account {
+        val result =
+            ctx.insertInto(ACCOUNT)
+                .set(account.toRecord())
+                .onConflict(ACCOUNT.ID)
+                .doUpdate()
+                .set(account.toRecord())
+                .returning()
+                .fetchOne()
+
+        return result!!.toDomain()
+    }
+
     fun getAccounts(
         pageSize: Int,
         page: Int,
@@ -59,17 +72,9 @@ class AccountRepository(private val ctx: DSLContext) {
         return record.toDomain()
     }
 
-    fun createAccount(account: Account): Account {
-        val record = ctx.insertInto(ACCOUNT).set(account.toRecord()).returning().fetchOne()
+    fun createAccount(account: Account): Account = upsertAccount(account)
 
-        return record!!.toDomain()
-    }
-
-    fun updateAccount(account: Account): Account {
-        val record = ctx.update(ACCOUNT).set(account.toRecord()).where(ACCOUNT.ID.eq(account.id)).returning().fetchOne()
-
-        return record!!.toDomain()
-    }
+    fun updateAccount(account: Account): Account = upsertAccount(account)
 
     fun deleteAccount(accountId: UUID) {
         ctx.deleteFrom(ACCOUNT).where(ACCOUNT.ID.eq(accountId)).execute()

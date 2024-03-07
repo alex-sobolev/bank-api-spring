@@ -18,12 +18,12 @@ class CustomerRepository(private val ctx: DSLContext) {
             birthdate = birthdate!!,
             gender = gender,
             address =
-            Address(
-                street = streetAddress!!,
-                city = city!!,
-                country = country!!,
-                postalCode = postalCode,
-            ),
+                Address(
+                    street = streetAddress!!,
+                    city = city!!,
+                    country = country!!,
+                    postalCode = postalCode,
+                ),
             email = email,
             phone = phone,
         )
@@ -43,6 +43,19 @@ class CustomerRepository(private val ctx: DSLContext) {
             it.email = email
             it.phone = phone
         }
+    }
+
+    private fun upsertCustomer(customer: Customer): Customer {
+        val result =
+            ctx.insertInto(CUSTOMER)
+                .set(customer.toRecord())
+                .onConflict(CUSTOMER.ID)
+                .doUpdate()
+                .set(customer.toRecord())
+                .returning()
+                .fetchOne()
+
+        return result!!.toDomain()
     }
 
     fun getCustomers(
@@ -77,26 +90,9 @@ class CustomerRepository(private val ctx: DSLContext) {
         return record.toDomain()
     }
 
-    fun createCustomer(customer: Customer): Customer {
-        val result =
-            ctx.insertInto(CUSTOMER)
-                .set(customer.toRecord())
-                .returning()
-                .fetchOne()
+    fun createCustomer(customer: Customer): Customer = upsertCustomer(customer)
 
-        return result!!.toDomain()
-    }
-
-    fun updateCustomer(customer: Customer): Customer {
-        val result =
-            ctx.update(CUSTOMER)
-                .set(customer.toRecord())
-                .where(CUSTOMER.ID.eq(customer.id))
-                .returning()
-                .fetchOne()
-
-        return result!!.toDomain()
-    }
+    fun updateCustomer(customer: Customer): Customer = upsertCustomer(customer)
 
     fun deleteCustomer(customerId: UUID) {
         ctx.deleteFrom(CUSTOMER)
