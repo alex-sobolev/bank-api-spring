@@ -155,6 +155,20 @@ value class AccountId(val value: String)
 ```
 See the value class docs [here](https://kotlinlang.org/docs/inline-classes.html).
 
+- Use upsert for your insert and update operations in which you can update the record if it already exists.
+  You can use sql [ON CONFLICT](https://www.postgresql.org/docs/current/sql-insert.html) for it.
+  ```kotlin
+  fun upsert(example :Example) =
+        context.insertInto(EXAMPLES)
+            .set(example.toInsertRecord())
+            .onConflict(EXAMPLES.ID)
+            .doUpdate()
+            .set(example.toUpdateRecord())
+            .where(EXAMPLES.ID.eq(id))
+            .returning()
+            .fetchOne()
+  ```
+
 #### Step-8
 
 We got a feedback from users that when they search with customer name that it takes too long.
