@@ -24,12 +24,12 @@ object CustomerFixtures {
         birthdate = birthdate!!,
         gender = "Male",
         address =
-        Address(
-            street = street!!,
-            city = city!!,
-            country = country!!,
-            postalCode = postalCode!!,
-        ),
+            Address(
+                street = street!!,
+                city = city!!,
+                country = country!!,
+                postalCode = postalCode!!,
+            ),
         email = email!!,
         phone = phone!!,
     )

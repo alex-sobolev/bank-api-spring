@@ -49,12 +49,12 @@ class CustomerControllerTest(
                 birthdate = LocalDate.of(1990, 1, 1),
                 gender = "Male",
                 address =
-                Address(
-                    street = "123 Test Street",
-                    city = "Test City",
-                    country = "Test Country",
-                    postalCode = "12345",
-                ),
+                    Address(
+                        street = "123 Test Street",
+                        city = "Test City",
+                        country = "Test Country",
+                        postalCode = "12345",
+                    ),
                 email = "john.doe@example.com",
                 phone = "+123 456 7890",
             )

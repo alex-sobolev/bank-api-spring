@@ -47,8 +47,6 @@ dependencies {
 
 val jooqGeneratedClassesDirName = "generated-jooq"
 ktlint {
-    version.set("0.50.0")
-
     filter {
         exclude { it.file.path.contains("/$jooqGeneratedClassesDirName/") }
     }
