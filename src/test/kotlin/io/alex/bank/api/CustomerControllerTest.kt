@@ -5,7 +5,7 @@ import io.alex.bank.customer.models.Address
 import io.alex.bank.customer.models.ApiCustomerListPage
 import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.models.CustomerRequest
-import io.alex.bank.db.tables.references.CUSTOMER
+import io.alex.bank.customer.repositories.CustomerRepository
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -20,6 +20,7 @@ import java.util.UUID
 // After we switch to Postgresql, we will use a real database instead of mock data
 class CustomerControllerTest(
     @Autowired private val webTestClient: WebTestClient,
+    @Autowired private val customerRepository: CustomerRepository,
 ) : IntegrationBaseTest() {
     @BeforeEach
     fun setUp() {
@@ -60,21 +61,7 @@ class CustomerControllerTest(
             )
     }
 
-    private fun addCustomerToDB(customer: Customer) {
-        context.insertInto(CUSTOMER)
-            .set(CUSTOMER.ID, customer.id)
-            .set(CUSTOMER.FIRST_NAME, customer.firstName)
-            .set(CUSTOMER.LAST_NAME, customer.lastName)
-            .set(CUSTOMER.BIRTHDATE, customer.birthdate)
-            .set(CUSTOMER.GENDER, customer.gender)
-            .set(CUSTOMER.STREET_ADDRESS, customer.address.street)
-            .set(CUSTOMER.CITY, customer.address.city)
-            .set(CUSTOMER.COUNTRY, customer.address.country)
-            .set(CUSTOMER.POSTAL_CODE, customer.address.postalCode)
-            .set(CUSTOMER.EMAIL, customer.email)
-            .set(CUSTOMER.PHONE, customer.phone)
-            .execute()
-    }
+    private fun addCustomerToDB(customer: Customer) = customerRepository.createCustomer(customer)
 
     @Test
     fun `get customer list`() {

@@ -34,6 +34,7 @@ class CustomerRepository(private val ctx: DSLContext) {
             it.id = id
             it.firstName = firstName
             it.lastName = lastName
+            it.fullName = "$firstName $lastName"
             it.birthdate = birthdate
             it.gender = gender
             it.streetAddress = address.street
@@ -68,11 +69,7 @@ class CustomerRepository(private val ctx: DSLContext) {
         val query = ctx.selectFrom(CUSTOMER)
 
         if (!name.isNullOrBlank()) {
-            query.where(
-                CUSTOMER.FIRST_NAME.contains(name)
-                    .or(CUSTOMER.LAST_NAME.contains(name))
-                    .or(CUSTOMER.FIRST_NAME.concat(" ").concat(CUSTOMER.LAST_NAME).contains(name)),
-            )
+            query.where(CUSTOMER.FULL_NAME.containsIgnoreCase(name))
         }
 
         query.limit(limit).offset(offset)

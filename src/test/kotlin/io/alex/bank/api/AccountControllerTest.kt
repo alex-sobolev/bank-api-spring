@@ -11,7 +11,7 @@ import io.alex.bank.account.models.CreateAccountRequest
 import io.alex.bank.account.models.Currency
 import io.alex.bank.customer.models.Address
 import io.alex.bank.customer.models.Customer
-import io.alex.bank.db.tables.references.CUSTOMER
+import io.alex.bank.customer.repositories.CustomerRepository
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -25,6 +25,7 @@ import java.util.UUID
 
 class AccountControllerTest(
     @Autowired private val webTestClient: WebTestClient,
+    @Autowired private val customerRepository: CustomerRepository,
 ) : IntegrationBaseTest() {
     @BeforeEach
     fun setUp() {
@@ -65,21 +66,7 @@ class AccountControllerTest(
         val notFoundUuid: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
     }
 
-    private fun addNewCustomer(customer: Customer) {
-        context.insertInto(CUSTOMER)
-            .set(CUSTOMER.ID, customer.id)
-            .set(CUSTOMER.FIRST_NAME, customer.firstName)
-            .set(CUSTOMER.LAST_NAME, customer.lastName)
-            .set(CUSTOMER.BIRTHDATE, customer.birthdate)
-            .set(CUSTOMER.GENDER, customer.gender)
-            .set(CUSTOMER.STREET_ADDRESS, customer.address.street)
-            .set(CUSTOMER.CITY, customer.address.city)
-            .set(CUSTOMER.COUNTRY, customer.address.country)
-            .set(CUSTOMER.POSTAL_CODE, customer.address.postalCode)
-            .set(CUSTOMER.EMAIL, customer.email)
-            .set(CUSTOMER.PHONE, customer.phone)
-            .execute()
-    }
+    private fun addNewCustomer(customer: Customer) = customerRepository.createCustomer(customer)
 
     private fun getAccountsList(): ApiAccountListPage =
         webTestClient.get()
