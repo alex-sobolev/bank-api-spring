@@ -185,3 +185,18 @@ To generate data for your `Customer` table you can use [mockaroo](https://www.mo
 3. Select format to `SQL`
 4. Add your table name (`CUSTOMER`)
 5. Click on `Generate Data` button.
+
+
+#### Step-9
+
+Last week, two users withdraw money from a same bank account and the account balance went to negative.
+This is a financial risk for our bank, and we want to prevent it happening again.
+
+Consider using optimistic locking described [here](https://en.wikipedia.org/wiki/Optimistic_concurrency_control) to handle concurrent operations.
+
+A simple approach to implement optimistic locking is
+- Add a `version` column to your table.
+- Increment `version` with each update.
+- Get `version` before each update.
+- Execute the update query with `where` condition version equals gathered version.
+- When the update query does not return anything, version is changed. Either inform the user or retry.
