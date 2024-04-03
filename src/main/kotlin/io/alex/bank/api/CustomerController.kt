@@ -69,10 +69,10 @@ class CustomerController(private val customerService: CustomerService) {
         @RequestParam pageSize: Int?,
         @RequestParam page: Int?,
     ): ResponseEntity<ApiCustomerListPage> {
-        val pageSize = pageSize ?: 50
-        val page = page ?: 1
-        val customers = customerService.getCustomers(name = name, pageSize = pageSize, page = page)
-        val payload = ApiCustomerListPage(customers = customers, page = page, pageSize = pageSize)
+        val pageLimit = pageSize ?: 50
+        val requestedPage = page ?: 1
+        val customers = customerService.getCustomers(name = name, pageSize = pageLimit, page = requestedPage)
+        val payload = ApiCustomerListPage(customers = customers, page = requestedPage, pageSize = pageLimit)
 
         return ResponseEntity(payload, HttpStatus.OK)
     }
@@ -81,11 +81,11 @@ class CustomerController(private val customerService: CustomerService) {
     fun getCustomer(
         @PathVariable customerId: String,
     ): ResponseEntity<Customer> {
-        val customerId = parseUuidFromString(customerId, "Invalid customer id format: $customerId")
+        val customerUuid = parseUuidFromString(customerId, "Invalid customer id format: $customerId")
 
         val customer =
-            customerService.getCustomer(customerId)
-                ?: throw NoSuchElementException("Customer with id $customerId not found")
+            customerService.getCustomer(customerUuid)
+                ?: throw NoSuchElementException("Customer with id $customerUuid not found")
 
         return ResponseEntity.ok(customer)
     }
@@ -109,14 +109,14 @@ class CustomerController(private val customerService: CustomerService) {
         @PathVariable customerId: String,
         @RequestBody customerRequest: CustomerRequest,
     ): ResponseEntity<Customer> {
-        val customerId = parseUuidFromString(customerId, "Invalid customer id format: $customerId")
+        val customerUuid = parseUuidFromString(customerId, "Invalid customer id format: $customerId")
 
-        customerService.getCustomer(customerId)
-            ?: throw NoSuchElementException("Customer with id $customerId not found")
+        customerService.getCustomer(customerUuid)
+            ?: throw NoSuchElementException("Customer with id $customerUuid not found")
 
         validateCustomerRequest(customerRequest)
 
-        val customerUpdate = customerRequest.toDomain(customerId)
+        val customerUpdate = customerRequest.toDomain(customerUuid)
 
         customerService.updateCustomer(customerUpdate)
 
@@ -128,12 +128,12 @@ class CustomerController(private val customerService: CustomerService) {
     fun deleteCustomer(
         @PathVariable customerId: String,
     ) {
-        val customerId = parseUuidFromString(customerId, "Invalid customer id format")
+        val customerUuid = parseUuidFromString(customerId, "Invalid customer id format")
 
-        customerService.getCustomer(customerId)
-            ?: throw NoSuchElementException("Customer with id $customerId not found")
+        customerService.getCustomer(customerUuid)
+            ?: throw NoSuchElementException("Customer with id $customerUuid not found")
 
-        customerService.deleteCustomer(customerId)
+        customerService.deleteCustomer(customerUuid)
     }
 
     companion object {

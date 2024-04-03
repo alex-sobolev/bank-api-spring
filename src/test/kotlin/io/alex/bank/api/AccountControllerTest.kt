@@ -221,6 +221,8 @@ class AccountControllerTest(
         res.account.id shouldBe accountId
         res.account.currency shouldBe createAccountRequest.currency
         res.account.type shouldBe createAccountRequest.type
+        res.account.balance shouldBe BigDecimal("0.00")
+        res.account.version shouldBe 0
         res.customer.id shouldBe customerId
     }
 
@@ -290,6 +292,7 @@ class AccountControllerTest(
 
         res.account.balance shouldBe BigDecimal("100.00")
         res.account.currency shouldBe createAccountRequest.currency
+        res.account.version shouldBe version + 1
     }
 
     @Test
@@ -322,6 +325,7 @@ class AccountControllerTest(
 
         createAccountRes.account.currency shouldBe createAccountRequest.currency
         createAccountRes.account.balance shouldBe 0.toBigDecimal()
+        createAccountRes.account.version shouldBe 0
 
         // deposit money
         val depositMoneyRequest =
@@ -352,6 +356,7 @@ class AccountControllerTest(
 
         createAccountRes.account.currency shouldBe createAccountRequest.currency
         createAccountRes.account.balance shouldBe 0.toBigDecimal()
+        createAccountRes.account.version shouldBe 0
 
         // deposit money
         val depositMoneyRequest =
@@ -382,6 +387,7 @@ class AccountControllerTest(
 
         createAccountRes.account.currency shouldBe createAccountRequest.currency
         createAccountRes.account.balance shouldBe 0.toBigDecimal()
+        createAccountRes.account.version shouldBe 0
 
         // deposit money
         val depositMoneyRequest =
@@ -424,6 +430,7 @@ class AccountControllerTest(
 
         depositMoneyRes.account.currency shouldBe createAccountRequest.currency
         depositMoneyRes.account.balance shouldBe BigDecimal("100.00")
+        depositMoneyRes.account.version shouldBe version + 1
 
         // withdraw money
         val withdrawMoneyRequest =
@@ -495,6 +502,7 @@ class AccountControllerTest(
 
         createAccountRes.account.currency shouldBe createAccountRequest.currency
         createAccountRes.account.balance shouldBe 0.toBigDecimal()
+        createAccountRes.account.version shouldBe 0
 
         // withdraw money
         val withdrawMoneyRequest =
@@ -525,6 +533,7 @@ class AccountControllerTest(
 
         createAccountRes.account.currency shouldBe createAccountRequest.currency
         createAccountRes.account.balance shouldBe 0.toBigDecimal()
+        createAccountRes.account.version shouldBe 0
 
         // withdraw money
         val withdrawMoneyRequest =
@@ -567,6 +576,7 @@ class AccountControllerTest(
 
         depositMoneyRes.account.currency shouldBe createAccountRequest.currency
         depositMoneyRes.account.balance shouldBe BigDecimal("100.00")
+        depositMoneyRes.account.version shouldBe version + 1
 
         // withdraw money
         val withdrawMoneyRequest =
@@ -610,6 +620,7 @@ class AccountControllerTest(
 
         depositMoneyRes.account.currency shouldBe createAccountRequest.currency
         depositMoneyRes.account.balance shouldBe BigDecimal("100.00")
+        depositMoneyRes.account.version shouldBe updatedVersion
 
         // withdraw money
         val withdrawMoneyRequest =

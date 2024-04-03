@@ -106,13 +106,13 @@ class AccountController(private val accountService: AccountService, private val 
     fun deleteAccount(
         @PathVariable accountId: String,
     ) {
-        val accountId = UUID.fromString(accountId)
+        val accountUuid = UUID.fromString(accountId)
 
-        if (accountService.getAccount(accountId) == null) {
-            throw NoSuchElementException("Account with id $accountId not found")
+        if (accountService.getAccount(accountUuid) == null) {
+            throw NoSuchElementException("Account with id $accountUuid not found")
         }
 
-        accountService.deleteAccount(accountId)
+        accountService.deleteAccount(accountUuid)
     }
 
     @PostMapping("/deposit")
