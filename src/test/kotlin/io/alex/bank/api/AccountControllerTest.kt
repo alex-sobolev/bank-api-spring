@@ -275,12 +275,15 @@ class AccountControllerTest(
         createAccountRes.account.currency shouldBe createAccountRequest.currency
         createAccountRes.account.balance shouldBe 0.toBigDecimal()
 
+        val version = createAccountRes.account.version
+
         // deposit money
         val depositMoneyRequest =
             AccountDepositRequest(
                 accountId = accountId.toString(),
                 amount = 100.toBigDecimal(),
                 currency = createAccountRequest.currency,
+                version = version,
             )
 
         val res = depositMoney(depositMoneyRequest)
@@ -296,6 +299,7 @@ class AccountControllerTest(
                 accountId = notFoundUuid.toString(),
                 amount = 100.toBigDecimal(),
                 currency = createAccountRequest.currency,
+                version = 0,
             )
 
         webTestClient.post()
@@ -314,6 +318,7 @@ class AccountControllerTest(
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
+        val version = createAccountRes.account.version
 
         createAccountRes.account.currency shouldBe createAccountRequest.currency
         createAccountRes.account.balance shouldBe 0.toBigDecimal()
@@ -324,6 +329,7 @@ class AccountControllerTest(
                 accountId = accountId.toString(),
                 amount = (-100).toBigDecimal(),
                 currency = createAccountRequest.currency,
+                version = version,
             )
 
         webTestClient.post()
@@ -342,6 +348,7 @@ class AccountControllerTest(
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
+        val version = createAccountRes.account.version
 
         createAccountRes.account.currency shouldBe createAccountRequest.currency
         createAccountRes.account.balance shouldBe 0.toBigDecimal()
@@ -352,6 +359,7 @@ class AccountControllerTest(
                 accountId = accountId.toString(),
                 amount = 0.toBigDecimal(),
                 currency = createAccountRequest.currency,
+                version = version,
             )
 
         webTestClient.post()
@@ -370,6 +378,7 @@ class AccountControllerTest(
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
+        val version = createAccountRes.account.version
 
         createAccountRes.account.currency shouldBe createAccountRequest.currency
         createAccountRes.account.balance shouldBe 0.toBigDecimal()
@@ -380,6 +389,7 @@ class AccountControllerTest(
                 accountId = accountId.toString(),
                 amount = 100.toBigDecimal(),
                 currency = Currency.USD,
+                version = version,
             )
 
         webTestClient.post()
@@ -398,6 +408,7 @@ class AccountControllerTest(
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
+        val version = createAccountRes.account.version
 
         // deposit money
         val depositMoneyRequest =
@@ -405,9 +416,11 @@ class AccountControllerTest(
                 accountId = accountId.toString(),
                 amount = 100.toBigDecimal(),
                 currency = createAccountRequest.currency,
+                version = version,
             )
 
         val depositMoneyRes = depositMoney(depositMoneyRequest)
+        val updatedVersion = depositMoneyRes.account.version
 
         depositMoneyRes.account.currency shouldBe createAccountRequest.currency
         depositMoneyRes.account.balance shouldBe BigDecimal("100.00")
@@ -418,6 +431,7 @@ class AccountControllerTest(
                 accountId = accountId.toString(),
                 amount = 50.toBigDecimal(),
                 currency = createAccountRequest.currency,
+                version = updatedVersion,
             )
 
         val withdrawMoneyRes = withdrawMoney(withdrawMoneyRequest)
@@ -432,6 +446,7 @@ class AccountControllerTest(
                 accountId = notFoundUuid.toString(),
                 amount = 100.toBigDecimal(),
                 currency = createAccountRequest.currency,
+                version = 0,
             )
 
         webTestClient.post()
@@ -450,6 +465,7 @@ class AccountControllerTest(
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
+        val version = createAccountRes.account.version
 
         createAccountRes.account.currency shouldBe createAccountRequest.currency
         createAccountRes.account.balance shouldBe 0.toBigDecimal()
@@ -460,6 +476,7 @@ class AccountControllerTest(
                 accountId = accountId.toString(),
                 amount = (-100).toBigDecimal(),
                 currency = createAccountRequest.currency,
+                version = version,
             )
 
         webTestClient.post().uri("/api/accounts/withdraw").accept(MediaType.APPLICATION_JSON)
@@ -474,6 +491,7 @@ class AccountControllerTest(
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
+        val version = createAccountRes.account.version
 
         createAccountRes.account.currency shouldBe createAccountRequest.currency
         createAccountRes.account.balance shouldBe 0.toBigDecimal()
@@ -484,6 +502,7 @@ class AccountControllerTest(
                 accountId = accountId.toString(),
                 amount = 0.toBigDecimal(),
                 currency = createAccountRequest.currency,
+                version = version,
             )
 
         webTestClient.post()
@@ -502,6 +521,7 @@ class AccountControllerTest(
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
+        val version = createAccountRes.account.version
 
         createAccountRes.account.currency shouldBe createAccountRequest.currency
         createAccountRes.account.balance shouldBe 0.toBigDecimal()
@@ -512,6 +532,7 @@ class AccountControllerTest(
                 accountId = accountId.toString(),
                 amount = 100.toBigDecimal(),
                 currency = Currency.USD,
+                version = version,
             )
 
         webTestClient.post()
@@ -530,6 +551,7 @@ class AccountControllerTest(
         // create an account
         val createAccountRes = addNewAccount(createAccountRequest)
         val accountId = createAccountRes.account.id
+        val version = createAccountRes.account.version
 
         // deposit money
         val depositMoneyRequest =
@@ -537,9 +559,11 @@ class AccountControllerTest(
                 accountId = accountId.toString(),
                 amount = 100.toBigDecimal(),
                 currency = createAccountRequest.currency,
+                version = version,
             )
 
         val depositMoneyRes = depositMoney(depositMoneyRequest)
+        val updatedVersion = depositMoneyRes.account.version
 
         depositMoneyRes.account.currency shouldBe createAccountRequest.currency
         depositMoneyRes.account.balance shouldBe BigDecimal("100.00")
@@ -550,6 +574,50 @@ class AccountControllerTest(
                 accountId = accountId.toString(),
                 amount = 150.toBigDecimal(),
                 currency = createAccountRequest.currency,
+                version = updatedVersion,
+            )
+
+        webTestClient.post()
+            .uri("/api/accounts/withdraw")
+            .accept(MediaType.APPLICATION_JSON)
+            .bodyValue(withdrawMoneyRequest)
+            .exchange()
+            .expectStatus().isBadRequest
+    }
+
+    @Test
+    fun `withdraw money with staled account version`() {
+        // Add customer to Customer table
+        addNewCustomer(newCustomer)
+
+        // create an account
+        val createAccountRes = addNewAccount(createAccountRequest)
+        val accountId = createAccountRes.account.id
+        val version = createAccountRes.account.version
+
+        // deposit money
+        val depositMoneyRequest =
+            AccountDepositRequest(
+                accountId = accountId.toString(),
+                amount = 100.toBigDecimal(),
+                currency = createAccountRequest.currency,
+                version = version,
+            )
+
+        val depositMoneyRes = depositMoney(depositMoneyRequest)
+        val updatedVersion = depositMoneyRes.account.version
+        val previousVersion = updatedVersion - 1
+
+        depositMoneyRes.account.currency shouldBe createAccountRequest.currency
+        depositMoneyRes.account.balance shouldBe BigDecimal("100.00")
+
+        // withdraw money
+        val withdrawMoneyRequest =
+            AccountWithdrawRequest(
+                accountId = accountId.toString(),
+                amount = 50.toBigDecimal(),
+                currency = createAccountRequest.currency,
+                version = previousVersion,
             )
 
         webTestClient.post()
