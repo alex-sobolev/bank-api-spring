@@ -22,6 +22,7 @@ class AccountRepository(private val ctx: DSLContext) {
             status = AccountStatus.valueOf(status!!),
             createdAt = createdAt!!,
             updatedAt = updatedAt,
+            version = version!!,
         )
 
     private fun Account.toRecord(): AccountRecord =
@@ -34,6 +35,7 @@ class AccountRepository(private val ctx: DSLContext) {
             it.status = status.name
             it.createdAt = createdAt
             it.updatedAt = updatedAt
+            it.version = version
         }
 
     private fun upsertAccount(account: Account): Account {

@@ -189,7 +189,7 @@ To generate data for your `Customer` table you can use [mockaroo](https://www.mo
 
 #### Step-9
 
-Last week, two users withdraw money from a same bank account and the account balance went to negative.
+Last week, two users withdrew money from the same bank account simultaneously and the account balance went to negative.
 This is a financial risk for our bank, and we want to prevent it happening again.
 
 Consider using optimistic locking described [here](https://en.wikipedia.org/wiki/Optimistic_concurrency_control) to handle concurrent operations.

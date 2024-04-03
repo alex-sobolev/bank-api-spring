@@ -18,6 +18,7 @@ object AccountFixtures {
         status: AccountStatus? = AccountStatus.ACTIVE,
         createdAt: LocalDate? = LocalDate.now(),
         updatedAt: LocalDate? = null,
+        version: Int? = 0,
     ) = Account(
         id = accountId!!,
         customerId = customerId!!,
@@ -27,5 +28,6 @@ object AccountFixtures {
         status = status!!,
         createdAt = createdAt!!,
         updatedAt = updatedAt,
+        version = version!!,
     )
 }

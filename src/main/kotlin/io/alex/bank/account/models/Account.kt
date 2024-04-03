@@ -32,6 +32,7 @@ data class Account(
     val status: AccountStatus,
     val createdAt: LocalDate,
     val updatedAt: LocalDate?,
+    val version: Int,
 )
 
 enum class AccountTransactionType {
@@ -96,10 +97,12 @@ data class AccountDepositRequest(
     val accountId: String,
     val amount: BigDecimal,
     val currency: Currency,
+    val version: Int,
 )
 
 data class AccountWithdrawRequest(
     val accountId: String,
     val amount: BigDecimal,
     val currency: Currency,
+    val version: Int,
 )

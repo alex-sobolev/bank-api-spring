@@ -34,21 +34,21 @@ class AccountController(private val accountService: AccountService, private val 
         @RequestParam pageSize: Int?,
         @RequestParam page: Int?,
     ): ResponseEntity<ApiAccountListPage> {
-        val page = page ?: 1
-        val pageSize = pageSize ?: 50
-        val accounts = accountService.getAccounts(pageSize = pageSize, page = page)
+        val pageNumber = page ?: 1
+        val pageLimit = pageSize ?: 50
+        val accounts = accountService.getAccounts(pageSize = pageLimit, page = pageNumber)
 
-        return ResponseEntity.ok(ApiAccountListPage(accounts = accounts, page = page, pageSize = pageSize))
+        return ResponseEntity.ok(ApiAccountListPage(accounts = accounts, page = pageNumber, pageSize = pageLimit))
     }
 
     @GetMapping("/{accountId}")
     fun getAccountById(
         @PathVariable accountId: String,
     ): ResponseEntity<ApiAccount> {
-        val accountId = UUID.fromString(accountId)
+        val accountUuid = UUID.fromString(accountId)
 
         val account =
-            accountService.getAccount(accountId) ?: throw NoSuchElementException("Account with id $accountId not found")
+            accountService.getAccount(accountUuid) ?: throw NoSuchElementException("Account with id $accountUuid not found")
 
         val customer =
             customerService.getCustomer(account.customerId)
@@ -61,13 +61,13 @@ class AccountController(private val accountService: AccountService, private val 
     fun getAccountsByCustomerId(
         @RequestParam(required = true) customerId: String,
     ): ResponseEntity<ApiCustomerAccountList> {
-        val customerId = parseUuidFromString(customerId, "Invalid customer id format: $customerId")
+        val customerUuid = parseUuidFromString(customerId, "Invalid customer id format: $customerId")
 
         val customer =
-            customerService.getCustomer(customerId)
-                ?: throw NoSuchElementException("Customer with id $customerId not found")
+            customerService.getCustomer(customerUuid)
+                ?: throw NoSuchElementException("Customer with id $customerUuid not found")
 
-        val accounts = accountService.getAccountsByCustomerId(customerId)
+        val accounts = accountService.getAccountsByCustomerId(customerUuid)
 
         return ResponseEntity.ok(ApiCustomerAccountList(customer = customer, accounts = accounts))
     }
@@ -93,6 +93,7 @@ class AccountController(private val accountService: AccountService, private val 
                 status = AccountStatus.ACTIVE,
                 createdAt = LocalDate.now(),
                 updatedAt = null,
+                version = 0,
             )
 
         accountService.createAccount(account)
@@ -106,8 +107,10 @@ class AccountController(private val accountService: AccountService, private val 
         @PathVariable accountId: String,
     ) {
         val accountId = UUID.fromString(accountId)
-        val account =
-            accountService.getAccount(accountId) ?: throw NoSuchElementException("Account with id $accountId not found")
+
+        if (accountService.getAccount(accountId) == null) {
+            throw NoSuchElementException("Account with id $accountId not found")
+        }
 
         accountService.deleteAccount(accountId)
     }
@@ -120,6 +123,10 @@ class AccountController(private val accountService: AccountService, private val 
 
         val account =
             accountService.getAccount(accountId) ?: throw NoSuchElementException("Account with id $accountId not found")
+
+        if (account.version != depositRequest.version) {
+            throw IllegalArgumentException("Account version is outdated")
+        }
 
         val customer =
             customerService.getCustomer(account.customerId)
@@ -139,6 +146,7 @@ class AccountController(private val accountService: AccountService, private val 
             account.copy(
                 balance = account.balance + amount,
                 updatedAt = LocalDate.now(),
+                version = account.version + 1,
             )
 
         accountService.updateAccount(updatedAccount)
@@ -154,6 +162,10 @@ class AccountController(private val accountService: AccountService, private val 
 
         val account =
             accountService.getAccount(accountId) ?: throw NoSuchElementException("Account with id $accountId not found")
+
+        if (account.version != withdrawRequest.version) {
+            throw IllegalArgumentException("Account version is outdated")
+        }
 
         val customer =
             customerService.getCustomer(account.customerId)
@@ -177,6 +189,7 @@ class AccountController(private val accountService: AccountService, private val 
             account.copy(
                 balance = account.balance - amount,
                 updatedAt = LocalDate.now(),
+                version = account.version + 1,
             )
 
         accountService.updateAccount(updatedAccount)
