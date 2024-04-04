@@ -25,7 +25,7 @@ class AccountRepository(private val ctx: DSLContext) {
             version = version!!,
         )
 
-    private fun Account.toRecord(): AccountRecord =
+    private fun Account.toRecord(increaseVersion: Boolean = false): AccountRecord =
         AccountRecord().also {
             it.id = id
             it.customerId = customerId
@@ -35,20 +35,21 @@ class AccountRepository(private val ctx: DSLContext) {
             it.status = status.name
             it.createdAt = createdAt
             it.updatedAt = updatedAt
-            it.version = version
+            it.version = if (increaseVersion) version + 1 else version
         }
 
-    private fun upsertAccount(account: Account): Account {
+    private fun upsertAccount(account: Account): Account? {
         val result =
             ctx.insertInto(ACCOUNT)
                 .set(account.toRecord())
                 .onConflict(ACCOUNT.ID)
                 .doUpdate()
-                .set(account.toRecord())
+                .set(account.toRecord(true))
+                .where(ACCOUNT.VERSION.eq(account.version))
                 .returning()
                 .fetchOne()
 
-        return result!!.toDomain()
+        return result?.toDomain()
     }
 
     fun getAccounts(
@@ -74,9 +75,9 @@ class AccountRepository(private val ctx: DSLContext) {
         return record.toDomain()
     }
 
-    fun createAccount(account: Account): Account = upsertAccount(account)
+    fun createAccount(account: Account): Account? = upsertAccount(account)
 
-    fun updateAccount(account: Account): Account = upsertAccount(account)
+    fun updateAccount(account: Account): Account? = upsertAccount(account)
 
     fun deleteAccount(accountId: UUID) {
         ctx.deleteFrom(ACCOUNT).where(ACCOUNT.ID.eq(accountId)).execute()
