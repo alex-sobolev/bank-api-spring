@@ -95,6 +95,48 @@ class AccountServiceTest {
     }
 
     @Test
+    fun `deposit calls repository with correct parameters`() {
+        // Given
+        val testAccount = testAccount(balance = BigDecimal(1000))
+        val testCurrency = Currency.EUR
+        val depositAmount = BigDecimal(500)
+        val accountToUpdate = testAccount.copy(balance = testAccount.balance + depositAmount, updatedAt = testAccount.createdAt)
+        val expectedAccount = accountToUpdate.copy(version = testAccount.version + 1)
+
+        every { accountRepository.findAccount(testAccount.id) } returns testAccount
+        every { accountRepository.updateAccount(accountToUpdate) } returns expectedAccount
+
+        // When
+        val actualAccount = accountService.deposit(testAccount.id, depositAmount, testCurrency, testAccount.version)
+
+        // Then
+        verify(exactly = 1) { accountRepository.findAccount(testAccount.id) }
+        verify(exactly = 1) { accountRepository.updateAccount(accountToUpdate) }
+        actualAccount shouldBe expectedAccount
+    }
+
+    @Test
+    fun `withdraw calls repository with correct parameters`() {
+        // Given
+        val testAccount = testAccount(balance = BigDecimal(1000))
+        val testCurrency = Currency.EUR
+        val withdrawAmount = BigDecimal(500)
+        val accountToUpdate = testAccount.copy(balance = testAccount.balance - withdrawAmount, updatedAt = testAccount.createdAt)
+        val expectedAccount = accountToUpdate.copy(version = testAccount.version + 1)
+
+        every { accountRepository.findAccount(testAccount.id) } returns testAccount
+        every { accountRepository.updateAccount(accountToUpdate) } returns expectedAccount
+
+        // When
+        val actualAccount = accountService.withdraw(testAccount.id, withdrawAmount, testCurrency, testAccount.version)
+
+        // Then
+        verify(exactly = 1) { accountRepository.findAccount(testAccount.id) }
+        verify(exactly = 1) { accountRepository.updateAccount(accountToUpdate) }
+        actualAccount shouldBe expectedAccount
+    }
+
+    @Test
     fun `deleteAccount calls repository with correct parameters`() {
         // Given
         val testAccountId = UUID.randomUUID()

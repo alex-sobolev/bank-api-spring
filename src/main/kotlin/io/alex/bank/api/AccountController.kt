@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.UUID
 
@@ -124,32 +123,17 @@ class AccountController(private val accountService: AccountService, private val 
         val account =
             accountService.getAccount(accountId) ?: throw NoSuchElementException("Account with id $accountId not found")
 
-        if (account.version != depositRequest.version) {
-            throw IllegalArgumentException("Account version is outdated")
-        }
-
         val customer =
             customerService.getCustomer(account.customerId)
                 ?: throw NoSuchElementException("Customer with id ${account.customerId} not found")
 
-        if (account.currency != depositRequest.currency) {
-            throw IllegalArgumentException("Deposit currency must match account currency")
-        }
-
-        if (depositRequest.amount <= 0.toBigDecimal()) {
-            throw IllegalArgumentException("Deposit amount must be positive")
-        }
-
-        val amount: BigDecimal = depositRequest.amount
-
         val updatedAccount =
-            account.copy(
-                balance = account.balance + amount,
-                updatedAt = LocalDate.now(),
-                version = account.version + 1,
+            accountService.deposit(
+                accountId = accountId,
+                amount = depositRequest.amount,
+                currency = depositRequest.currency,
+                version = depositRequest.version,
             )
-
-        accountService.updateAccount(updatedAccount)
 
         return ResponseEntity.ok(ApiAccount(account = updatedAccount, customer = customer))
     }
@@ -163,36 +147,17 @@ class AccountController(private val accountService: AccountService, private val 
         val account =
             accountService.getAccount(accountId) ?: throw NoSuchElementException("Account with id $accountId not found")
 
-        if (account.version != withdrawRequest.version) {
-            throw IllegalArgumentException("Account version is outdated")
-        }
-
         val customer =
             customerService.getCustomer(account.customerId)
                 ?: throw NoSuchElementException("Customer with id ${account.customerId} not found")
 
-        if (account.currency != withdrawRequest.currency) {
-            throw IllegalArgumentException("Withdraw currency must match account currency")
-        }
-
-        val amount: BigDecimal = withdrawRequest.amount
-
-        if (amount <= 0.toBigDecimal()) {
-            throw IllegalArgumentException("Withdraw amount must be positive")
-        }
-
-        if (account.balance < amount) {
-            throw IllegalArgumentException("Account balance is less than requested amount")
-        }
-
         val updatedAccount =
-            account.copy(
-                balance = account.balance - amount,
-                updatedAt = LocalDate.now(),
-                version = account.version + 1,
+            accountService.withdraw(
+                accountId = accountId,
+                amount = withdrawRequest.amount,
+                currency = withdrawRequest.currency,
+                version = withdrawRequest.version,
             )
-
-        accountService.updateAccount(updatedAccount)
 
         return ResponseEntity.ok(ApiAccount(account = updatedAccount, customer = customer))
     }
