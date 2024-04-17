@@ -1,0 +1,3 @@
+ALTER table customer ADD COLUMN active BOOLEAN NOT NULL DEFAULT TRUE;
+
+ALTER table customer ALTER COLUMN active DROP DEFAULT;

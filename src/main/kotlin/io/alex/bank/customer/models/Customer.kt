@@ -12,6 +12,7 @@ data class Customer(
     val address: Address,
     val email: String?,
     val phone: String?,
+    val active: Boolean,
 )
 
 data class Address(

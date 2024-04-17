@@ -41,6 +41,7 @@ class CustomerControllerTest(
                 address = Address(street = "Test Street", city = "Test City", country = "Test Country", postalCode = "Test Postal Code"),
                 email = "test@example.com",
                 phone = "+49 123 4567 8900",
+                active = true,
             )
 
         val newCustomerRequest =
