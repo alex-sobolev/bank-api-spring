@@ -57,7 +57,7 @@ class AccountRepository(private val ctx: DSLContext) {
         page: Int,
     ): List<Account> {
         val offset = (page - 1) * pageSize
-        val query = ctx.selectFrom(ACCOUNT).offset(offset).limit(pageSize)
+        val query = ctx.selectFrom(ACCOUNT).where(ACCOUNT.STATUS.eq(AccountStatus.ACTIVE.name)).offset(offset).limit(pageSize)
         val records = query.fetch()
 
         return records.map { it.toDomain() }
@@ -70,7 +70,10 @@ class AccountRepository(private val ctx: DSLContext) {
     }
 
     fun findAccount(accountId: UUID): Account? {
-        val record = ctx.selectFrom(ACCOUNT).where(ACCOUNT.ID.eq(accountId)).fetchOne() ?: return null
+        val record =
+            ctx.selectFrom(
+                ACCOUNT,
+            ).where(ACCOUNT.ID.eq(accountId)).and(ACCOUNT.STATUS.eq(AccountStatus.ACTIVE.name)).fetchOne() ?: return null
 
         return record.toDomain()
     }
@@ -80,6 +83,6 @@ class AccountRepository(private val ctx: DSLContext) {
     fun updateAccount(account: Account): Account? = upsertAccount(account)
 
     fun deleteAccount(accountId: UUID) {
-        ctx.deleteFrom(ACCOUNT).where(ACCOUNT.ID.eq(accountId)).execute()
+        ctx.update(ACCOUNT).set(ACCOUNT.STATUS, AccountStatus.INACTIVE.name).where(ACCOUNT.ID.eq(accountId)).execute()
     }
 }
