@@ -17,6 +17,7 @@ object CustomerFixtures {
         postalCode: String? = "12345",
         email: String? = "john.doe@example.com",
         phone: String? = "+1234567890",
+        active: Boolean? = true,
     ) = Customer(
         id = customerId!!,
         firstName = firstName!!,
@@ -32,5 +33,6 @@ object CustomerFixtures {
             ),
         email = email!!,
         phone = phone!!,
+        active = active!!,
     )
 }

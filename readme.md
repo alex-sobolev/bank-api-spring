@@ -200,3 +200,25 @@ A simple approach to implement optimistic locking is
 - Get `version` before each update.
 - Execute the update query with `where` condition version equals gathered version.
 - When the update query does not return anything, version is changed. Either inform the user or retry.
+
+#### Step-10
+
+Last week, a customer was able to withdraw money from an account even though the customer is archived (soft deleted).
+When we investigated, we found that the customer was archived, but his accounts were not archived.
+Make sure that when a customer is archived, all of their accounts are also archived.
+
+- Implement archive for customer and account.
+- Execute customer and account archiving in a single transaction.
+
+Consider using [TransactionTemplate](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/transaction/support/TransactionTemplate.html) to handle transactions in Spring.
+```kotlin
+class SomeService(private val transactionTemplate: TransactionTemplate) {
+    
+    override fun someFunction() {
+        transactionTemplate.execute { 
+            doDbStuff()
+            doMoreDbStuff()
+        }
+    }
+}
+```
