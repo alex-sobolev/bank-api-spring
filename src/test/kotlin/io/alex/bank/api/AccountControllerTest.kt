@@ -11,6 +11,7 @@ import io.alex.bank.account.models.CreateAccountRequest
 import io.alex.bank.account.models.Currency
 import io.alex.bank.customer.models.Address
 import io.alex.bank.customer.models.Customer
+import io.alex.bank.customer.models.CustomerStatus
 import io.alex.bank.customer.repositories.CustomerRepository
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.AfterEach
@@ -54,7 +55,7 @@ class AccountControllerTest(
                     ),
                 email = "john.doe@example.com",
                 phone = "+123 456 7890",
-                active = true,
+                status = CustomerStatus.ACTIVE,
             )
 
         val createAccountRequest =

@@ -1,7 +1,6 @@
 package io.alex.bank.customer.services
 
 import io.alex.bank.account.repositories.AccountRepository
-import io.alex.bank.account.services.AccountService
 import io.alex.bank.customer.repositories.CustomerRepository
 import io.alex.bank.fixtures.CustomerFixtures.testCustomer
 import io.kotest.matchers.shouldBe
@@ -16,10 +15,9 @@ import java.util.UUID
 
 class CustomerServiceTest {
     private val accountRepository: AccountRepository = mockk()
-    private val accountService: AccountService = AccountService(accountRepository)
     private val customerRepository: CustomerRepository = mockk()
     private val transactionTemplate: TransactionTemplate = mockk()
-    private val customerService: CustomerService = CustomerService(customerRepository, accountService, transactionTemplate)
+    private val customerService: CustomerService = CustomerService(customerRepository, accountRepository, transactionTemplate)
 
     @Test
     fun `getCustomers calls repository`() {
@@ -85,8 +83,9 @@ class CustomerServiceTest {
         // Given
         val id = UUID.randomUUID()
 
-        every { customerRepository.deleteCustomer(id) } returns Unit
+        every { customerRepository.deleteCustomer(id) } returns 1
         every { accountRepository.getAccountsByCustomerId(id) } returns emptyList()
+        every { accountRepository.deleteAccountsByCustomerId(id) } returns 1
 
         val transactionStatus: TransactionStatus = mockk()
 

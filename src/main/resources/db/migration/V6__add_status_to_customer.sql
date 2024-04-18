@@ -1,3 +1,3 @@
-ALTER table customer ADD COLUMN active BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER table customer ADD COLUMN status TEXT NOT NULL DEFAULT 'ACTIVE';
 
-ALTER table customer ALTER COLUMN active DROP DEFAULT;
+ALTER table customer ALTER COLUMN status DROP DEFAULT;

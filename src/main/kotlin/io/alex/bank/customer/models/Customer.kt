@@ -3,6 +3,11 @@ package io.alex.bank.customer.models
 import java.time.LocalDate
 import java.util.UUID
 
+enum class CustomerStatus {
+    ACTIVE,
+    INACTIVE,
+}
+
 data class Customer(
     val id: UUID,
     val firstName: String,
@@ -12,7 +17,7 @@ data class Customer(
     val address: Address,
     val email: String?,
     val phone: String?,
-    val active: Boolean,
+    val status: CustomerStatus,
 )
 
 data class Address(

@@ -4,9 +4,7 @@ import io.alex.bank.account.models.Currency
 import io.alex.bank.account.repositories.AccountRepository
 import io.alex.bank.fixtures.AccountFixtures.testAccount
 import io.kotest.matchers.shouldBe
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
@@ -140,7 +138,7 @@ class AccountServiceTest {
     fun `deleteAccount calls repository with correct parameters`() {
         // Given
         val testAccountId = UUID.randomUUID()
-        every { accountRepository.deleteAccount(testAccountId) } just Runs
+        every { accountRepository.deleteAccount(testAccountId) } returns 1
 
         // When
         accountService.deleteAccount(testAccountId)

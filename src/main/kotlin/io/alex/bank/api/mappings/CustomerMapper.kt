@@ -2,12 +2,13 @@ package io.alex.bank.api.mappings
 
 import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.models.CustomerRequest
+import io.alex.bank.customer.models.CustomerStatus
 import java.util.UUID
 
 object CustomerMapper {
     fun CustomerRequest.toDomain(
         customerId: UUID,
-        active: Boolean? = true,
+        status: CustomerStatus = CustomerStatus.ACTIVE,
     ) = Customer(
         id = customerId,
         firstName = firstName,
@@ -17,6 +18,6 @@ object CustomerMapper {
         address = address,
         email = email,
         phone = phone,
-        active = active!!,
+        status = status,
     )
 }

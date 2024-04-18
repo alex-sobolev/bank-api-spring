@@ -82,7 +82,11 @@ class AccountRepository(private val ctx: DSLContext) {
 
     fun updateAccount(account: Account): Account? = upsertAccount(account)
 
-    fun deleteAccount(accountId: UUID) {
-        ctx.update(ACCOUNT).set(ACCOUNT.STATUS, AccountStatus.INACTIVE.name).where(ACCOUNT.ID.eq(accountId)).execute()
+    fun deleteAccount(accountId: UUID): Int {
+        return ctx.update(ACCOUNT).set(ACCOUNT.STATUS, AccountStatus.INACTIVE.name).where(ACCOUNT.ID.eq(accountId)).execute()
+    }
+
+    fun deleteAccountsByCustomerId(customerId: UUID): Int {
+        return ctx.update(ACCOUNT).set(ACCOUNT.STATUS, AccountStatus.INACTIVE.name).where(ACCOUNT.CUSTOMER_ID.eq(customerId)).execute()
     }
 }
