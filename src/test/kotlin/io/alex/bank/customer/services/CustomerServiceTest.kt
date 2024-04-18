@@ -1,5 +1,7 @@
 package io.alex.bank.customer.services
 
+import io.alex.bank.account.repositories.AccountRepository
+import io.alex.bank.account.services.AccountService
 import io.alex.bank.customer.repositories.CustomerRepository
 import io.alex.bank.fixtures.CustomerFixtures.testCustomer
 import io.kotest.matchers.shouldBe
@@ -7,11 +9,17 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import org.springframework.transaction.TransactionStatus
+import org.springframework.transaction.support.TransactionCallback
+import org.springframework.transaction.support.TransactionTemplate
 import java.util.UUID
 
 class CustomerServiceTest {
+    private val accountRepository: AccountRepository = mockk()
+    private val accountService: AccountService = AccountService(accountRepository)
     private val customerRepository: CustomerRepository = mockk()
-    private val customerService: CustomerService = CustomerService(customerRepository)
+    private val transactionTemplate: TransactionTemplate = mockk()
+    private val customerService: CustomerService = CustomerService(customerRepository, accountService, transactionTemplate)
 
     @Test
     fun `getCustomers calls repository`() {
@@ -76,7 +84,16 @@ class CustomerServiceTest {
     fun `deleteCustomer calls repository`() {
         // Given
         val id = UUID.randomUUID()
+
         every { customerRepository.deleteCustomer(id) } returns Unit
+        every { accountRepository.getAccountsByCustomerId(id) } returns emptyList()
+
+        val transactionStatus: TransactionStatus = mockk()
+
+        every { transactionTemplate.execute<Unit>(any()) } answers {
+            firstArg<TransactionCallback<Unit>>().doInTransaction(transactionStatus)
+            Unit
+        }
 
         // When
         customerService.deleteCustomer(id)
