@@ -1,6 +1,11 @@
 package io.alex.bank.api
 
 import io.alex.bank.IntegrationBaseTest
+import io.alex.bank.account.models.Account
+import io.alex.bank.account.models.AccountStatus
+import io.alex.bank.account.models.AccountType
+import io.alex.bank.account.models.Currency
+import io.alex.bank.account.services.AccountService
 import io.alex.bank.customer.models.Address
 import io.alex.bank.customer.models.ApiCustomerListPage
 import io.alex.bank.customer.models.Customer
@@ -13,6 +18,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.UUID
 
@@ -21,6 +27,7 @@ import java.util.UUID
 class CustomerControllerTest(
     @Autowired private val webTestClient: WebTestClient,
     @Autowired private val customerRepository: CustomerRepository,
+    @Autowired private val accountService: AccountService,
 ) : IntegrationBaseTest() {
     @BeforeEach
     fun setUp() {
@@ -333,5 +340,59 @@ class CustomerControllerTest(
             .bodyValue(testCustomer)
             .exchange()
             .expectStatus().isOk
+    }
+
+    @Test
+    fun `delete user with accounts`() {
+        // 1. Create new customer
+        val testCustomer = newCustomerRequest
+
+        val createResponse =
+            webTestClient.post()
+                .uri("/api/customers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(testCustomer)
+                .exchange()
+                .expectStatus().isOk
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody(Customer::class.java)
+                .returnResult()
+                .responseBody!!
+
+        val createdCustomerId = createResponse.id
+
+        // 2. Create new account for the created customer through accountService
+        val createdAccount =
+            accountService.createAccount(
+                Account(
+                    id = UUID.randomUUID(),
+                    customerId = createdCustomerId,
+                    balance = BigDecimal(1000),
+                    currency = Currency.EUR,
+                    type = AccountType.CHECKING,
+                    status = AccountStatus.ACTIVE,
+                    createdAt = LocalDate.now(),
+                    updatedAt = null,
+                    version = 0,
+                ),
+            )
+
+        // 3. Delete customer
+        webTestClient.delete()
+            .uri("/api/customers/$createdCustomerId")
+            .exchange()
+            .expectStatus().isNoContent
+
+        // 4. Verify customer is deleted
+        webTestClient.get()
+            .uri("/api/customers/$createdCustomerId")
+            .exchange()
+            .expectStatus().isNotFound
+
+        // 5. Verify account is deleted
+        webTestClient.get()
+            .uri("/api/accounts/${createdAccount!!.id}")
+            .exchange()
+            .expectStatus().isNotFound
     }
 }
