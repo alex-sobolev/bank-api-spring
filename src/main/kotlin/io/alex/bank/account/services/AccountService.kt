@@ -89,5 +89,11 @@ class AccountService(private val accountRepository: AccountRepository) {
         return updatedAccount
     }
 
-    fun deleteAccount(accountId: UUID) = accountRepository.deleteAccount(accountId)
+    fun deleteAccount(accountId: UUID) {
+        val deleteResult = accountRepository.deleteAccount(accountId)
+
+        if (deleteResult == 0) {
+            throw NoSuchElementException("Account with id $accountId not found")
+        }
+    }
 }

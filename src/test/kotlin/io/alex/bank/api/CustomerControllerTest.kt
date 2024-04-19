@@ -5,11 +5,12 @@ import io.alex.bank.account.models.Account
 import io.alex.bank.account.models.AccountStatus
 import io.alex.bank.account.models.AccountType
 import io.alex.bank.account.models.Currency
-import io.alex.bank.account.services.AccountService
+import io.alex.bank.account.repositories.AccountRepository
 import io.alex.bank.customer.models.Address
 import io.alex.bank.customer.models.ApiCustomerListPage
 import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.models.CustomerRequest
+import io.alex.bank.customer.models.CustomerStatus
 import io.alex.bank.customer.repositories.CustomerRepository
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.AfterEach
@@ -27,7 +28,7 @@ import java.util.UUID
 class CustomerControllerTest(
     @Autowired private val webTestClient: WebTestClient,
     @Autowired private val customerRepository: CustomerRepository,
-    @Autowired private val accountService: AccountService,
+    @Autowired private val accountRepository: AccountRepository,
 ) : IntegrationBaseTest() {
     @BeforeEach
     fun setUp() {
@@ -48,7 +49,7 @@ class CustomerControllerTest(
                 address = Address(street = "Test Street", city = "Test City", country = "Test Country", postalCode = "Test Postal Code"),
                 email = "test@example.com",
                 phone = "+49 123 4567 8900",
-                active = true,
+                status = CustomerStatus.ACTIVE,
             )
 
         val newCustomerRequest =
@@ -363,7 +364,7 @@ class CustomerControllerTest(
 
         // 2. Create new account for the created customer through accountService
         val createdAccount =
-            accountService.createAccount(
+            accountRepository.createAccount(
                 Account(
                     id = UUID.randomUUID(),
                     customerId = createdCustomerId,

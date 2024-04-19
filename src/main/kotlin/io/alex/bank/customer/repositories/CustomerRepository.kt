@@ -2,6 +2,7 @@ package io.alex.bank.customer.repositories
 
 import io.alex.bank.customer.models.Address
 import io.alex.bank.customer.models.Customer
+import io.alex.bank.customer.models.CustomerStatus
 import io.alex.bank.db.tables.records.CustomerRecord
 import io.alex.bank.db.tables.references.CUSTOMER
 import org.jooq.DSLContext
@@ -26,7 +27,7 @@ class CustomerRepository(private val ctx: DSLContext) {
                 ),
             email = email,
             phone = phone,
-            active = active!!,
+            status = CustomerStatus.valueOf(status!!),
         )
     }
 
@@ -44,7 +45,7 @@ class CustomerRepository(private val ctx: DSLContext) {
             it.postalCode = address.postalCode
             it.email = email
             it.phone = phone
-            it.active = active
+            it.status = status.name
         }
     }
 
@@ -70,7 +71,7 @@ class CustomerRepository(private val ctx: DSLContext) {
         val limit = pageSize
         val query = ctx.selectFrom(CUSTOMER)
 
-        query.where(CUSTOMER.ACTIVE.eq(true))
+        query.where(CUSTOMER.STATUS.eq(CustomerStatus.ACTIVE.name))
 
         if (!name.isNullOrBlank()) {
             query.where(CUSTOMER.FULL_NAME.containsIgnoreCase(name))
@@ -85,7 +86,7 @@ class CustomerRepository(private val ctx: DSLContext) {
 
     fun findCustomer(customerId: UUID): Customer? {
         val record =
-            ctx.selectFrom(CUSTOMER).where(CUSTOMER.ID.eq(customerId)).and(CUSTOMER.ACTIVE.eq(true)).fetchOne()
+            ctx.selectFrom(CUSTOMER).where(CUSTOMER.ID.eq(customerId)).and(CUSTOMER.STATUS.eq(CustomerStatus.ACTIVE.name)).fetchOne()
                 ?: return null
 
         return record.toDomain()
@@ -95,9 +96,9 @@ class CustomerRepository(private val ctx: DSLContext) {
 
     fun updateCustomer(customer: Customer): Customer = upsertCustomer(customer)
 
-    fun deleteCustomer(customerId: UUID) {
-        ctx.update(CUSTOMER)
-            .set(CUSTOMER.ACTIVE, false)
+    fun deleteCustomer(customerId: UUID): Int {
+        return ctx.update(CUSTOMER)
+            .set(CUSTOMER.STATUS, CustomerStatus.INACTIVE.name)
             .where(CUSTOMER.ID.eq(customerId))
             .execute()
     }

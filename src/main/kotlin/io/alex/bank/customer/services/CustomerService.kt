@@ -1,6 +1,6 @@
 package io.alex.bank.customer.services
 
-import io.alex.bank.account.services.AccountService
+import io.alex.bank.account.repositories.AccountRepository
 import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.repositories.CustomerRepository
 import org.springframework.stereotype.Service
@@ -10,7 +10,7 @@ import java.util.UUID
 @Service
 class CustomerService(
     private val customerRepository: CustomerRepository,
-    private val accountService: AccountService,
+    private val accountRepository: AccountRepository,
     private val transactionTemplate: TransactionTemplate,
 ) {
     fun getCustomers(
@@ -27,11 +27,19 @@ class CustomerService(
 
     fun deleteCustomer(customerId: UUID) {
         transactionTemplate.execute {
-            val accounts = accountService.getAccountsByCustomerId(customerId)
+            val accounts = accountRepository.getAccountsByCustomerId(customerId)
 
-            accounts.forEach { accountService.deleteAccount(it.id) }
+            if (accounts.isNotEmpty()) {
+                accountRepository.deleteAccountsByCustomerId(customerId)
+            }
 
-            customerRepository.deleteCustomer(customerId)
+            accountRepository.deleteAccountsByCustomerId(customerId)
+
+            val archiveResult = customerRepository.deleteCustomer(customerId)
+
+            if (archiveResult == 0) {
+                throw NoSuchElementException("Customer with id $customerId not found")
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ package io.alex.bank.fixtures
 
 import io.alex.bank.customer.models.Address
 import io.alex.bank.customer.models.Customer
+import io.alex.bank.customer.models.CustomerStatus
 import java.time.LocalDate
 import java.util.UUID
 
@@ -17,7 +18,7 @@ object CustomerFixtures {
         postalCode: String? = "12345",
         email: String? = "john.doe@example.com",
         phone: String? = "+1234567890",
-        active: Boolean? = true,
+        status: CustomerStatus = CustomerStatus.ACTIVE,
     ) = Customer(
         id = customerId!!,
         firstName = firstName!!,
@@ -33,6 +34,6 @@ object CustomerFixtures {
             ),
         email = email!!,
         phone = phone!!,
-        active = active!!,
+        status = status,
     )
 }
