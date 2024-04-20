@@ -6,17 +6,21 @@ import io.alex.bank.account.models.AccountStatus
 import io.alex.bank.account.models.AccountType
 import io.alex.bank.account.models.Currency
 import io.alex.bank.account.repositories.AccountRepository
+import io.alex.bank.api.CustomerControllerTest.Companion.newCustomerRequest
 import io.alex.bank.customer.models.Address
 import io.alex.bank.customer.models.ApiCustomerListPage
 import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.models.CustomerRequest
 import io.alex.bank.customer.models.CustomerStatus
 import io.alex.bank.customer.repositories.CustomerRepository
+import io.alex.bank.fixtures.CustomerFixtures.testCustomer
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.math.BigDecimal
@@ -342,7 +346,13 @@ class CustomerControllerTest(
             .exchange()
             .expectStatus().isOk
     }
+}
 
+class ArchiveCustomerTest(
+    @Autowired private val webTestClient: WebTestClient,
+    @SpyBean @Autowired private val customerRepository: CustomerRepository,
+    @SpyBean @Autowired private val accountRepository: AccountRepository,
+) : IntegrationBaseTest() {
     @Test
     fun `delete user with accounts`() {
         // 1. Create new customer
@@ -395,5 +405,97 @@ class CustomerControllerTest(
             .uri("/api/accounts/${createdAccount!!.id}")
             .exchange()
             .expectStatus().isNotFound
+    }
+
+    @Test
+    fun `archive customer with accounts where account archiving fails`() {
+        // 1. Create a new customer via customerRepository
+        val testCustomer = testCustomer()
+        val createdCustomer = customerRepository.createCustomer(testCustomer)
+
+        // 2. Create a new account for the created customer via accountRepository
+        val createdAccount =
+            accountRepository.createAccount(
+                Account(
+                    id = UUID.randomUUID(),
+                    customerId = createdCustomer.id,
+                    balance = BigDecimal(1000),
+                    currency = Currency.EUR,
+                    type = AccountType.CHECKING,
+                    status = AccountStatus.ACTIVE,
+                    createdAt = LocalDate.now(),
+                    updatedAt = null,
+                    version = 0,
+                ),
+            )
+
+        // 3. Use @SpyBean to fail the account archiving
+        Mockito.doThrow(
+            IllegalArgumentException("Failed to delete accounts"),
+        ).`when`(accountRepository).deleteAccountsByCustomerId(createdCustomer.id)
+
+        // 4. try to archive customer
+        webTestClient.delete()
+            .uri("/api/customers/${createdCustomer.id}")
+            .exchange()
+            .expectStatus().isBadRequest
+
+        // 5. Verify customer is not archived
+        webTestClient.get()
+            .uri("/api/customers/${createdCustomer.id}")
+            .exchange()
+            .expectStatus().isOk
+
+        // 6. Verify account is not archived
+        webTestClient.get()
+            .uri("/api/accounts/${createdAccount!!.id}")
+            .exchange()
+            .expectStatus().isOk
+    }
+
+    @Test
+    fun `archive customer with accounts when customer archiving fails`() {
+        // 1. Create a new customer via customerRepository
+        val testCustomer = testCustomer()
+        val createdCustomer = customerRepository.createCustomer(testCustomer)
+
+        // 2. Create a new account for the created customer via accountRepository
+        val createdAccount =
+            accountRepository.createAccount(
+                Account(
+                    id = UUID.randomUUID(),
+                    customerId = createdCustomer.id,
+                    balance = BigDecimal(1000),
+                    currency = Currency.EUR,
+                    type = AccountType.CHECKING,
+                    status = AccountStatus.ACTIVE,
+                    createdAt = LocalDate.now(),
+                    updatedAt = null,
+                    version = 0,
+                ),
+            )
+
+        // 3. Use @SpyBean to fail the customer archiving
+        Mockito.doThrow(
+            IllegalArgumentException("Failed to delete customer"),
+        ).`when`(customerRepository).deleteCustomer(createdCustomer.id)
+
+        // 4. try to archive customer
+        webTestClient.delete()
+            .uri("/api/customers/${createdCustomer.id}")
+            .exchange()
+            .expectStatus().isBadRequest
+
+        // 5. Verify customer is not archived
+        webTestClient.get()
+            .uri("/api/customers/${createdCustomer.id}")
+            .exchange()
+            .expectStatus().isOk
+
+        // 6. Verify account is not archived
+        webTestClient.get()
+            .uri("/api/accounts/${createdAccount!!.id}")
+            .exchange()
+            .expectStatus().isOk
     }
 }

@@ -33,11 +33,11 @@ class CustomerService(
                 accountRepository.deleteAccountsByCustomerId(customerId)
             }
 
-            accountRepository.deleteAccountsByCustomerId(customerId)
+            val archiveAccountResult = accountRepository.deleteAccountsByCustomerId(customerId)
 
-            val archiveResult = customerRepository.deleteCustomer(customerId)
+            val archiveCustomerResult = customerRepository.deleteCustomer(customerId)
 
-            if (archiveResult == 0) {
+            if (archiveCustomerResult == 0) {
                 throw NoSuchElementException("Customer with id $customerId not found")
             }
         }

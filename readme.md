@@ -222,3 +222,5 @@ class SomeService(private val transactionTemplate: TransactionTemplate) {
     }
 }
 ```
+- Implement an integration test for the customer and account archiving where customer archiving is successful but account archiving fails.
+  Verify that the customer is not archived in this case. Use [@MockkBean](https://github.com/Ninja-Squad/springmockk) to fail the account archiving in the integration test.

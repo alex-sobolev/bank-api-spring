@@ -18,7 +18,7 @@ object CustomerFixtures {
         postalCode: String? = "12345",
         email: String? = "john.doe@example.com",
         phone: String? = "+1234567890",
-        status: CustomerStatus = CustomerStatus.ACTIVE,
+        status: CustomerStatus? = CustomerStatus.ACTIVE,
     ) = Customer(
         id = customerId!!,
         firstName = firstName!!,
@@ -34,6 +34,6 @@ object CustomerFixtures {
             ),
         email = email!!,
         phone = phone!!,
-        status = status,
+        status = status!!,
     )
 }
