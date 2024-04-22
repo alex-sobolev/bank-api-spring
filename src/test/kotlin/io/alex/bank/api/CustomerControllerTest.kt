@@ -1,5 +1,6 @@
 package io.alex.bank.api
 
+import com.ninjasquad.springmockk.SpykBean
 import io.alex.bank.IntegrationBaseTest
 import io.alex.bank.account.models.Account
 import io.alex.bank.account.models.AccountStatus
@@ -15,12 +16,11 @@ import io.alex.bank.customer.models.CustomerStatus
 import io.alex.bank.customer.repositories.CustomerRepository
 import io.alex.bank.fixtures.CustomerFixtures.testCustomer
 import io.kotest.matchers.shouldBe
+import io.mockk.every
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.math.BigDecimal
@@ -350,8 +350,8 @@ class CustomerControllerTest(
 
 class ArchiveCustomerTest(
     @Autowired private val webTestClient: WebTestClient,
-    @SpyBean @Autowired private val customerRepository: CustomerRepository,
-    @SpyBean @Autowired private val accountRepository: AccountRepository,
+    @SpykBean @Autowired private val customerRepository: CustomerRepository,
+    @SpykBean @Autowired private val accountRepository: AccountRepository,
 ) : IntegrationBaseTest() {
     @Test
     fun `delete user with accounts`() {
@@ -429,10 +429,12 @@ class ArchiveCustomerTest(
                 ),
             )
 
-        // 3. Use @SpyBean to fail the account archiving
-        Mockito.doThrow(
-            IllegalArgumentException("Failed to delete accounts"),
-        ).`when`(accountRepository).deleteAccountsByCustomerId(createdCustomer.id)
+        // 3. Use @SpykBean to fail the account archiving
+        every {
+            accountRepository.deleteAccountsByCustomerId(
+                createdCustomer.id,
+            )
+        } throws IllegalArgumentException("Failed to delete accounts")
 
         // 4. try to archive customer
         webTestClient.delete()
@@ -475,10 +477,8 @@ class ArchiveCustomerTest(
                 ),
             )
 
-        // 3. Use @SpyBean to fail the customer archiving
-        Mockito.doThrow(
-            IllegalArgumentException("Failed to delete customer"),
-        ).`when`(customerRepository).deleteCustomer(createdCustomer.id)
+        // 3. Use @SpykBean to fail the customer archiving
+        every { customerRepository.deleteCustomer(createdCustomer.id) } throws IllegalArgumentException("Failed to delete customer")
 
         // 4. try to archive customer
         webTestClient.delete()
