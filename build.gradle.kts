@@ -33,16 +33,17 @@ dependencies {
     implementation("org.flywaydb:flyway-core:${RecommendedVersions.FLYWAY_VERSION}")
     implementation("org.flywaydb:flyway-database-postgresql:${RecommendedVersions.FLYWAY_VERSION}")
     implementation("org.jooq:jooq:${RecommendedVersions.JOOQ_VERSION}")
-    implementation("io.arrow-kt:arrow-core:1.2.2")
-    implementation("io.arrow-kt:arrow-fx-coroutines:1.2.2")
+    implementation("io.arrow-kt:arrow-core:1.2.4")
+    implementation("io.arrow-kt:arrow-fx-coroutines:1.2.4")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webflux")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
-    testImplementation("io.kotest:kotest-assertions-core:5.8.0")
+    testImplementation("io.kotest:kotest-assertions-core:5.8.1")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
-    testImplementation("io.mockk:mockk:1.13.9")
+    testImplementation("io.mockk:mockk:1.13.10")
+    testImplementation("com.ninja-squad:springmockk:4.0.2")
 }
 
 val jooqGeneratedClassesDirName = "generated-jooq"
