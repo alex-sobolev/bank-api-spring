@@ -21,6 +21,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.math.BigDecimal
@@ -356,21 +357,9 @@ class ArchiveCustomerTest(
     @Test
     fun `delete user with accounts`() {
         // 1. Create new customer
-        val testCustomer = newCustomerRequest
-
-        val createResponse =
-            webTestClient.post()
-                .uri("/api/customers")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(testCustomer)
-                .exchange()
-                .expectStatus().isOk
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBody(Customer::class.java)
-                .returnResult()
-                .responseBody!!
-
-        val createdCustomerId = createResponse.id
+        val testCustomer = testCustomer()
+        val createdCustomer = customerRepository.createCustomer(testCustomer)
+        val createdCustomerId = createdCustomer.id
 
         // 2. Create new account for the created customer through accountService
         val createdAccount =
@@ -394,21 +383,15 @@ class ArchiveCustomerTest(
             .exchange()
             .expectStatus().isNoContent
 
-        // 4. Verify customer is deleted
-        webTestClient.get()
-            .uri("/api/customers/$createdCustomerId")
-            .exchange()
-            .expectStatus().isNotFound
+        // 4. Verify customer is deleted via customer repository
+        customerRepository.findCustomer(createdCustomerId) shouldBe null
 
-        // 5. Verify account is deleted
-        webTestClient.get()
-            .uri("/api/accounts/${createdAccount!!.id}")
-            .exchange()
-            .expectStatus().isNotFound
+        // 5. Verify account is deleted via account repository
+        accountRepository.findAccount(createdAccount!!.id) shouldBe null
     }
 
     @Test
-    fun `archive customer with accounts where account archiving fails`() {
+    fun `archive customer with accounts is rolled back when account archiving fails`() {
         // 1. Create a new customer via customerRepository
         val testCustomer = testCustomer()
         val createdCustomer = customerRepository.createCustomer(testCustomer)
@@ -434,29 +417,23 @@ class ArchiveCustomerTest(
             accountRepository.deleteAccountsByCustomerId(
                 createdCustomer.id,
             )
-        } throws IllegalArgumentException("Failed to delete accounts")
+        } throws DataIntegrityViolationException("Failed to delete accounts")
 
         // 4. try to archive customer
         webTestClient.delete()
             .uri("/api/customers/${createdCustomer.id}")
             .exchange()
-            .expectStatus().isBadRequest
+            .expectStatus().is5xxServerError
 
-        // 5. Verify customer is not archived
-        webTestClient.get()
-            .uri("/api/customers/${createdCustomer.id}")
-            .exchange()
-            .expectStatus().isOk
+        // 5. Verify customer is not archived (via customer repository)
+        customerRepository.findCustomer(createdCustomer.id) shouldBe createdCustomer
 
-        // 6. Verify account is not archived
-        webTestClient.get()
-            .uri("/api/accounts/${createdAccount!!.id}")
-            .exchange()
-            .expectStatus().isOk
+        // 6. Verify account is not archived (via account repository)
+        accountRepository.findAccount(createdAccount!!.id) shouldBe createdAccount
     }
 
     @Test
-    fun `archive customer with accounts when customer archiving fails`() {
+    fun `archive customer with accounts should be rolled back when customer archiving fails`() {
         // 1. Create a new customer via customerRepository
         val testCustomer = testCustomer()
         val createdCustomer = customerRepository.createCustomer(testCustomer)
@@ -478,24 +455,18 @@ class ArchiveCustomerTest(
             )
 
         // 3. Use @SpykBean to fail the customer archiving
-        every { customerRepository.deleteCustomer(createdCustomer.id) } throws IllegalArgumentException("Failed to delete customer")
+        every { customerRepository.deleteCustomer(createdCustomer.id) } throws DataIntegrityViolationException("Failed to delete customer")
 
         // 4. try to archive customer
         webTestClient.delete()
             .uri("/api/customers/${createdCustomer.id}")
             .exchange()
-            .expectStatus().isBadRequest
+            .expectStatus().is5xxServerError
 
-        // 5. Verify customer is not archived
-        webTestClient.get()
-            .uri("/api/customers/${createdCustomer.id}")
-            .exchange()
-            .expectStatus().isOk
+        // 5. Verify customer is not archived (via customer repository)
+        customerRepository.findCustomer(createdCustomer.id) shouldBe createdCustomer
 
-        // 6. Verify account is not archived
-        webTestClient.get()
-            .uri("/api/accounts/${createdAccount!!.id}")
-            .exchange()
-            .expectStatus().isOk
+        // 6. Verify account is not archived (via account repository)
+        accountRepository.findAccount(createdAccount!!.id) shouldBe createdAccount
     }
 }

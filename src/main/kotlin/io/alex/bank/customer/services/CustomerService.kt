@@ -33,8 +33,6 @@ class CustomerService(
                 accountRepository.deleteAccountsByCustomerId(customerId)
             }
 
-            val archiveAccountResult = accountRepository.deleteAccountsByCustomerId(customerId)
-
             val archiveCustomerResult = customerRepository.deleteCustomer(customerId)
 
             if (archiveCustomerResult == 0) {
