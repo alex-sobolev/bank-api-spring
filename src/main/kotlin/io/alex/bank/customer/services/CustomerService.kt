@@ -1,8 +1,10 @@
 package io.alex.bank.customer.services
 
+import arrow.core.Either
 import io.alex.bank.account.repositories.AccountRepository
 import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.repositories.CustomerRepository
+import io.alex.bank.error.Failure.CustomerNotFound
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import java.util.UUID
@@ -19,7 +21,15 @@ class CustomerService(
         page: Int,
     ): List<Customer> = customerRepository.getCustomers(name = name, pageSize = pageSize, page = page)
 
-    fun getCustomer(customerId: UUID): Customer? = customerRepository.findCustomer(customerId)
+    fun getCustomer(customerId: UUID): Either<CustomerNotFound, Customer> {
+        val customer = customerRepository.findCustomer(customerId)
+
+        return if (customer != null) {
+            Either.Right(customer)
+        } else {
+            Either.Left(CustomerNotFound("Customer with id $customerId not found"))
+        }
+    }
 
     fun createCustomer(customer: Customer) = customerRepository.createCustomer(customer)
 
