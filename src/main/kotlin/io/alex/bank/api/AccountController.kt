@@ -10,7 +10,6 @@ import io.alex.bank.account.models.ApiCustomerAccountList
 import io.alex.bank.account.models.CreateAccountRequest
 import io.alex.bank.account.services.AccountService
 import io.alex.bank.customer.services.CustomerService
-import io.alex.bank.error.Failure.CustomerNotFound
 import io.alex.bank.error.handleFailure
 import io.alex.bank.utils.parseUuidFromString
 import org.springframework.http.HttpStatus
@@ -53,7 +52,7 @@ class AccountController(private val accountService: AccountService, private val 
 
         val customer =
             customerService.getCustomer(account.customerId).fold(
-                ifLeft = { handleFailure(CustomerNotFound("Customer with id ${account.customerId} not found")) },
+                ifLeft = { handleFailure(it) },
                 ifRight = { it },
             )
 
@@ -69,7 +68,7 @@ class AccountController(private val accountService: AccountService, private val 
         val customer =
             customerService.getCustomer(customerUuid)
                 .fold(
-                    ifLeft = { handleFailure(CustomerNotFound("Customer with id $customerUuid not found")) },
+                    ifLeft = { handleFailure(it) },
                     ifRight = { it },
                 )
 
@@ -88,7 +87,7 @@ class AccountController(private val accountService: AccountService, private val 
         val customer =
             customerService.getCustomer(customerId)
                 .fold(
-                    ifLeft = { handleFailure(CustomerNotFound("Customer with id $customerId not found")) },
+                    ifLeft = { handleFailure(it) },
                     ifRight = { it },
                 )
 
@@ -136,7 +135,7 @@ class AccountController(private val accountService: AccountService, private val 
         val customer =
             customerService.getCustomer(account.customerId)
                 .fold(
-                    ifLeft = { handleFailure(CustomerNotFound("Customer with id ${account.customerId} not found")) },
+                    ifLeft = { handleFailure(it) },
                     ifRight = { it },
                 )
 
@@ -163,7 +162,7 @@ class AccountController(private val accountService: AccountService, private val 
         val customer =
             customerService.getCustomer(account.customerId)
                 .fold(
-                    ifLeft = { handleFailure(CustomerNotFound("Customer with id ${account.customerId} not found")) },
+                    ifLeft = { handleFailure(it) },
                     ifRight = { it },
                 )
 
