@@ -10,6 +10,8 @@ import io.alex.bank.account.models.ApiCustomerAccountList
 import io.alex.bank.account.models.CreateAccountRequest
 import io.alex.bank.account.services.AccountService
 import io.alex.bank.customer.services.CustomerService
+import io.alex.bank.error.Failure.CustomerNotFound
+import io.alex.bank.error.handleFailure
 import io.alex.bank.utils.parseUuidFromString
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -50,8 +52,10 @@ class AccountController(private val accountService: AccountService, private val 
             accountService.getAccount(accountUuid) ?: throw NoSuchElementException("Account with id $accountUuid not found")
 
         val customer =
-            customerService.getCustomer(account.customerId)
-                ?: throw NoSuchElementException("Customer with id ${account.customerId} not found")
+            customerService.getCustomer(account.customerId).fold(
+                ifLeft = { handleFailure(CustomerNotFound("Customer with id ${account.customerId} not found")) },
+                ifRight = { it },
+            )
 
         return ResponseEntity.ok(ApiAccount(account = account, customer = customer))
     }
@@ -64,7 +68,10 @@ class AccountController(private val accountService: AccountService, private val 
 
         val customer =
             customerService.getCustomer(customerUuid)
-                ?: throw NoSuchElementException("Customer with id $customerUuid not found")
+                .fold(
+                    ifLeft = { handleFailure(CustomerNotFound("Customer with id $customerUuid not found")) },
+                    ifRight = { it },
+                )
 
         val accounts = accountService.getAccountsByCustomerId(customerUuid)
 
@@ -80,7 +87,10 @@ class AccountController(private val accountService: AccountService, private val 
 
         val customer =
             customerService.getCustomer(customerId)
-                ?: throw NoSuchElementException("Customer with id ${accountRequest.customerId} not found")
+                .fold(
+                    ifLeft = { handleFailure(CustomerNotFound("Customer with id $customerId not found")) },
+                    ifRight = { it },
+                )
 
         val account =
             Account(
@@ -125,7 +135,10 @@ class AccountController(private val accountService: AccountService, private val 
 
         val customer =
             customerService.getCustomer(account.customerId)
-                ?: throw NoSuchElementException("Customer with id ${account.customerId} not found")
+                .fold(
+                    ifLeft = { handleFailure(CustomerNotFound("Customer with id ${account.customerId} not found")) },
+                    ifRight = { it },
+                )
 
         val updatedAccount =
             accountService.deposit(
@@ -149,7 +162,10 @@ class AccountController(private val accountService: AccountService, private val 
 
         val customer =
             customerService.getCustomer(account.customerId)
-                ?: throw NoSuchElementException("Customer with id ${account.customerId} not found")
+                .fold(
+                    ifLeft = { handleFailure(CustomerNotFound("Customer with id ${account.customerId} not found")) },
+                    ifRight = { it },
+                )
 
         val updatedAccount =
             accountService.withdraw(

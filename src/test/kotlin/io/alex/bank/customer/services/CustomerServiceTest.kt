@@ -47,7 +47,11 @@ class CustomerServiceTest {
         every { customerRepository.findCustomer(id) } returns expectedCustomer
 
         // When
-        val actualCustomer = customerService.getCustomer(id)
+        val actualCustomer =
+            customerService.getCustomer(id).fold(
+                ifLeft = { null },
+                ifRight = { it },
+            )
 
         // Then
         actualCustomer shouldBe expectedCustomer

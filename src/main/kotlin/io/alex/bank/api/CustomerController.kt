@@ -5,6 +5,9 @@ import io.alex.bank.customer.models.ApiCustomerListPage
 import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.models.CustomerRequest
 import io.alex.bank.customer.services.CustomerService
+import io.alex.bank.error.Failure.CustomerNotFound
+import io.alex.bank.error.handleFailure
+import io.alex.bank.error.toResponseOrThrow
 import io.alex.bank.utils.parseUuidFromString
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -83,11 +86,9 @@ class CustomerController(private val customerService: CustomerService) {
     ): ResponseEntity<Customer> {
         val customerUuid = parseUuidFromString(customerId, "Invalid customer id format: $customerId")
 
-        val customer =
-            customerService.getCustomer(customerUuid)
-                ?: throw NoSuchElementException("Customer with id $customerUuid not found")
-
-        return ResponseEntity.ok(customer)
+        return customerService
+            .getCustomer(customerUuid)
+            .toResponseOrThrow()
     }
 
     @PostMapping
@@ -112,7 +113,10 @@ class CustomerController(private val customerService: CustomerService) {
         val customerUuid = parseUuidFromString(customerId, "Invalid customer id format: $customerId")
 
         customerService.getCustomer(customerUuid)
-            ?: throw NoSuchElementException("Customer with id $customerUuid not found")
+            .fold(
+                ifLeft = { handleFailure(CustomerNotFound("Customer with id $customerUuid not found")) },
+                ifRight = { it },
+            )
 
         validateCustomerRequest(customerRequest)
 
@@ -131,7 +135,10 @@ class CustomerController(private val customerService: CustomerService) {
         val customerUuid = parseUuidFromString(customerId, "Invalid customer id format")
 
         customerService.getCustomer(customerUuid)
-            ?: throw NoSuchElementException("Customer with id $customerUuid not found")
+            .fold(
+                ifLeft = { handleFailure(CustomerNotFound("Customer with id $customerUuid not found")) },
+                ifRight = { it },
+            )
 
         customerService.deleteCustomer(customerUuid)
     }
