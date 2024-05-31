@@ -5,7 +5,6 @@ import io.alex.bank.customer.models.ApiCustomerListPage
 import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.models.CustomerRequest
 import io.alex.bank.customer.services.CustomerService
-import io.alex.bank.error.Failure.CustomerNotFound
 import io.alex.bank.error.handleFailure
 import io.alex.bank.error.toResponseOrThrow
 import io.alex.bank.utils.parseUuidFromString
@@ -100,9 +99,9 @@ class CustomerController(private val customerService: CustomerService) {
         val newCustomerId = UUID.randomUUID()
         val customer = customerRequest.toDomain(newCustomerId)
 
-        customerService.createCustomer(customer)
-
-        return ResponseEntity.ok(customer)
+        return customerService
+            .createCustomer(customer)
+            .toResponseOrThrow()
     }
 
     @PutMapping("/{customerId}")
@@ -112,19 +111,13 @@ class CustomerController(private val customerService: CustomerService) {
     ): ResponseEntity<Customer> {
         val customerUuid = parseUuidFromString(customerId, "Invalid customer id format: $customerId")
 
-        customerService.getCustomer(customerUuid)
-            .fold(
-                ifLeft = { handleFailure(CustomerNotFound("Customer with id $customerUuid not found")) },
-                ifRight = { it },
-            )
-
         validateCustomerRequest(customerRequest)
 
         val customerUpdate = customerRequest.toDomain(customerUuid)
 
-        customerService.updateCustomer(customerUpdate)
-
-        return ResponseEntity.ok(customerUpdate)
+        return customerService
+            .updateCustomer(customerUpdate)
+            .toResponseOrThrow()
     }
 
     @DeleteMapping("/{customerId}")
@@ -136,7 +129,7 @@ class CustomerController(private val customerService: CustomerService) {
 
         customerService.getCustomer(customerUuid)
             .fold(
-                ifLeft = { handleFailure(CustomerNotFound("Customer with id $customerUuid not found")) },
+                ifLeft = { handleFailure(it) },
                 ifRight = { it },
             )
 

@@ -1,7 +1,10 @@
 package io.alex.bank.customer.services
 
+import arrow.core.left
+import arrow.core.right
 import io.alex.bank.account.repositories.AccountRepository
 import io.alex.bank.customer.repositories.CustomerRepository
+import io.alex.bank.error.Failure
 import io.alex.bank.fixtures.CustomerFixtures.testCustomer
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -59,26 +62,45 @@ class CustomerServiceTest {
     }
 
     @Test
+    fun `getCustomer calls repository and fails with CustomerNotFound`() {
+        // Given
+        val id = UUID.randomUUID()
+        every { customerRepository.findCustomer(id) } returns null
+
+        // When
+        val result = customerService.getCustomer(id)
+
+        // Then
+        result shouldBe Failure.CustomerNotFound("Customer with id $id not found").left()
+        verify(exactly = 1) { customerRepository.findCustomer(id) }
+    }
+
+    @Test
     fun `updateCustomer calls repository`() {
         // Prepare customer data
         val id = UUID.randomUUID()
         val customerToAdd = testCustomer(customerId = id)
         every { customerRepository.createCustomer(customerToAdd) } returns customerToAdd
 
-        val addedCustomer = customerService.createCustomer(customerToAdd)
+        val addedCustomer =
+            customerService.createCustomer(customerToAdd).fold(
+                ifLeft = { null },
+                ifRight = { it },
+            )
 
         addedCustomer shouldBe customerToAdd
         verify(exactly = 1) { customerRepository.createCustomer(customerToAdd) }
 
         // Given
-        val customerToUpdate = addedCustomer.copy(email = "john.doe.updated@example.com")
+        val customerToUpdate = addedCustomer!!.copy(email = "john.doe.updated@example.com")
+        every { customerRepository.findCustomer(customerToUpdate.id) } returns addedCustomer
         every { customerRepository.updateCustomer(customerToUpdate) } returns customerToUpdate
 
         // When
         val updatedCustomer = customerService.updateCustomer(customerToUpdate)
 
         // Then
-        updatedCustomer shouldBe customerToUpdate
+        updatedCustomer shouldBe customerToUpdate.right()
         verify(exactly = 1) { customerRepository.updateCustomer(customerToUpdate) }
     }
 

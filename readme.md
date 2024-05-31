@@ -224,3 +224,11 @@ class SomeService(private val transactionTemplate: TransactionTemplate) {
 ```
 - Implement an integration test for the customer and account archiving where customer archiving is successful but account archiving fails.
   Verify that the customer is not archived in this case. Use [@MockkBean](https://github.com/Ninja-Squad/springmockk) or [@SpyBean](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/mock/mockito/SpyBean.html) to fail the account archiving in the integration test.
+
+#### Step-11
+
+We would like leverage functional programming in our project. Arrow-kt is a library that provides functional programming in Kotlin.
+Here are the docs for Arrow-kt: https://arrow-kt.io/docs/.
+
+- Replace throwing exceptions on the service layer with Arrow's `Either` type. See the docs [here](https://apidocs.arrow-kt.io/arrow-core/arrow.core/-either/index.html).
+- On the API layer, you need to throw an exception when the `Either` is `Left`, so that the response can be mapped correctly.
