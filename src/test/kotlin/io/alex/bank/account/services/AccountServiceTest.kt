@@ -1,8 +1,11 @@
 package io.alex.bank.account.services
 
+import arrow.core.right
 import io.alex.bank.account.models.Currency
 import io.alex.bank.account.repositories.AccountRepository
+import io.alex.bank.customer.services.CustomerService
 import io.alex.bank.fixtures.AccountFixtures.testAccount
+import io.alex.bank.fixtures.CustomerFixtures.testCustomer
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
@@ -13,7 +16,8 @@ import java.util.UUID
 
 class AccountServiceTest {
     private val accountRepository: AccountRepository = mockk()
-    private val accountService: AccountService = AccountService(accountRepository)
+    private val customerService: CustomerService = mockk()
+    private val accountService: AccountService = AccountService(accountRepository, customerService)
 
     @Test
     fun `getAccounts calls repository with correct parameters`() {
@@ -38,6 +42,8 @@ class AccountServiceTest {
         val testAccount1 = testAccount(customerId = testCustomerId, currency = Currency.EUR)
         val testAccount2 = testAccount(customerId = testCustomerId, currency = Currency.USD)
         val expectedAccounts = listOf(testAccount1, testAccount2)
+
+        every { customerService.getCustomer(testCustomerId) } returns testCustomer(customerId = testCustomerId).right()
         every { accountRepository.getAccountsByCustomerId(testCustomerId) } returns expectedAccounts
 
         // When
@@ -45,7 +51,7 @@ class AccountServiceTest {
 
         // Then
         verify(exactly = 1) { accountRepository.getAccountsByCustomerId(testCustomerId) }
-        actualAccounts shouldBe expectedAccounts
+        actualAccounts shouldBe expectedAccounts.right()
     }
 
     @Test
@@ -60,7 +66,7 @@ class AccountServiceTest {
 
         // Then
         verify(exactly = 1) { accountRepository.findAccount(testAccountId) }
-        actualAccount shouldBe expectedAccount
+        actualAccount shouldBe expectedAccount.right()
     }
 
     @Test
@@ -82,6 +88,7 @@ class AccountServiceTest {
         // Given
         val testAccount = testAccount()
         val updatedAccount = testAccount.copy(balance = BigDecimal(2000))
+        every { accountRepository.findAccount(testAccount.id) } returns testAccount
         every { accountRepository.updateAccount(updatedAccount) } returns updatedAccount
 
         // When
@@ -89,7 +96,7 @@ class AccountServiceTest {
 
         // Then
         verify(exactly = 1) { accountRepository.updateAccount(updatedAccount) }
-        actualAccount shouldBe updatedAccount
+        actualAccount shouldBe updatedAccount.right()
     }
 
     @Test
@@ -110,7 +117,7 @@ class AccountServiceTest {
         // Then
         verify(exactly = 1) { accountRepository.findAccount(testAccount.id) }
         verify(exactly = 1) { accountRepository.updateAccount(accountToUpdate) }
-        actualAccount shouldBe expectedAccount
+        actualAccount shouldBe expectedAccount.right()
     }
 
     @Test
@@ -131,7 +138,7 @@ class AccountServiceTest {
         // Then
         verify(exactly = 1) { accountRepository.findAccount(testAccount.id) }
         verify(exactly = 1) { accountRepository.updateAccount(accountToUpdate) }
-        actualAccount shouldBe expectedAccount
+        actualAccount shouldBe expectedAccount.right()
     }
 
     @Test

@@ -71,7 +71,7 @@ class CustomerServiceTest {
         val result = customerService.getCustomer(id)
 
         // Then
-        result shouldBe Failure.CustomerNotFound("Customer with id $id not found").left()
+        result shouldBe Failure.CustomerNotFound(id).left()
         verify(exactly = 1) { customerRepository.findCustomer(id) }
     }
 
