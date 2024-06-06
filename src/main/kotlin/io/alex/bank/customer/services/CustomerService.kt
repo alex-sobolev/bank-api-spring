@@ -28,7 +28,7 @@ class CustomerService(
     fun getCustomer(customerId: UUID): Either<Failure, Customer> =
         either {
             val customer = customerRepository.findCustomer(customerId)
-            ensureNotNull(customer) { CustomerNotFound("Customer with id $customerId not found") }
+            ensureNotNull(customer) { CustomerNotFound(customerId) }
         }
 
     fun createCustomer(customer: Customer): Either<Failure, Customer> =
@@ -39,7 +39,7 @@ class CustomerService(
     fun updateCustomer(customer: Customer): Either<Failure, Customer> =
         either {
             val customerToUpdate = customerRepository.findCustomer(customer.id)
-            ensureNotNull(customerToUpdate) { CustomerNotFound("Customer with id ${customer.id} not found") }
+            ensureNotNull(customerToUpdate) { CustomerNotFound(customer.id) }
 
             return customerRepository.updateCustomer(customer).right()
         }

@@ -11,6 +11,7 @@ import io.alex.bank.account.models.CreateAccountRequest
 import io.alex.bank.account.services.AccountService
 import io.alex.bank.customer.services.CustomerService
 import io.alex.bank.error.handleFailure
+import io.alex.bank.error.toResponseOrThrow
 import io.alex.bank.utils.parseUuidFromString
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -48,7 +49,10 @@ class AccountController(private val accountService: AccountService, private val 
         val accountUuid = UUID.fromString(accountId)
 
         val account =
-            accountService.getAccount(accountUuid) ?: throw NoSuchElementException("Account with id $accountUuid not found")
+            accountService.getAccount(accountUuid).fold(
+                ifLeft = { handleFailure(it) },
+                ifRight = { it },
+            )
 
         val customer =
             customerService.getCustomer(account.customerId).fold(
@@ -72,7 +76,11 @@ class AccountController(private val accountService: AccountService, private val 
                     ifRight = { it },
                 )
 
-        val accounts = accountService.getAccountsByCustomerId(customerUuid)
+        val accounts =
+            accountService.getAccountsByCustomerId(customerUuid).fold(
+                ifLeft = { handleFailure(it) },
+                ifRight = { it },
+            )
 
         return ResponseEntity.ok(ApiCustomerAccountList(customer = customer, accounts = accounts))
     }
@@ -116,11 +124,7 @@ class AccountController(private val accountService: AccountService, private val 
     ) {
         val accountUuid = UUID.fromString(accountId)
 
-        if (accountService.getAccount(accountUuid) == null) {
-            throw NoSuchElementException("Account with id $accountUuid not found")
-        }
-
-        accountService.deleteAccount(accountUuid)
+        accountService.deleteAccount(accountUuid).toResponseOrThrow()
     }
 
     @PostMapping("/deposit")
@@ -130,7 +134,10 @@ class AccountController(private val accountService: AccountService, private val 
         val accountId = UUID.fromString(depositRequest.accountId)
 
         val account =
-            accountService.getAccount(accountId) ?: throw NoSuchElementException("Account with id $accountId not found")
+            accountService.getAccount(accountId).fold(
+                ifLeft = { handleFailure(it) },
+                ifRight = { it },
+            )
 
         val customer =
             customerService.getCustomer(account.customerId)
@@ -145,6 +152,9 @@ class AccountController(private val accountService: AccountService, private val 
                 amount = depositRequest.amount,
                 currency = depositRequest.currency,
                 version = depositRequest.version,
+            ).fold(
+                ifLeft = { handleFailure(it) },
+                ifRight = { it },
             )
 
         return ResponseEntity.ok(ApiAccount(account = updatedAccount, customer = customer))
@@ -157,7 +167,10 @@ class AccountController(private val accountService: AccountService, private val 
         val accountId = UUID.fromString(withdrawRequest.accountId)
 
         val account =
-            accountService.getAccount(accountId) ?: throw NoSuchElementException("Account with id $accountId not found")
+            accountService.getAccount(accountId).fold(
+                ifLeft = { handleFailure(it) },
+                ifRight = { it },
+            )
 
         val customer =
             customerService.getCustomer(account.customerId)
@@ -172,6 +185,9 @@ class AccountController(private val accountService: AccountService, private val 
                 amount = withdrawRequest.amount,
                 currency = withdrawRequest.currency,
                 version = withdrawRequest.version,
+            ).fold(
+                ifLeft = { handleFailure(it) },
+                ifRight = { it },
             )
 
         return ResponseEntity.ok(ApiAccount(account = updatedAccount, customer = customer))

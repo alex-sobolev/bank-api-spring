@@ -27,6 +27,12 @@ fun handleFailure(failure: Failure): Nothing =
     with(failure) {
         when (this) {
             is Failure.CustomerNotFound -> throw ApiException(HttpStatus.NOT_FOUND, message)
+            is Failure.AccountNotFound -> throw ApiException(HttpStatus.NOT_FOUND, message)
+            is Failure.MismatchedCurrency -> throw ApiException(HttpStatus.BAD_REQUEST, message)
+            is Failure.InsufficientFunds -> throw ApiException(HttpStatus.BAD_REQUEST, message)
+            is Failure.InvalidDepositAmount -> throw ApiException(HttpStatus.BAD_REQUEST, message)
+            is Failure.InvalidWithdrawAmount -> throw ApiException(HttpStatus.BAD_REQUEST, message)
+            is Failure.AccountVersionOutOfDate -> throw ApiException(HttpStatus.BAD_REQUEST, message)
         }
     }
 
