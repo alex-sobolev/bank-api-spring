@@ -115,7 +115,7 @@ class AccountServiceTest {
         val actualAccount = accountService.deposit(testAccount.id, depositAmount, testCurrency, testAccount.version)
 
         // Then
-        verify(exactly = 1) { accountRepository.findAccount(testAccount.id) }
+        verify(exactly = 2) { accountRepository.findAccount(testAccount.id) }
         verify(exactly = 1) { accountRepository.updateAccount(accountToUpdate) }
         actualAccount shouldBe expectedAccount.right()
     }
@@ -136,7 +136,7 @@ class AccountServiceTest {
         val actualAccount = accountService.withdraw(testAccount.id, withdrawAmount, testCurrency, testAccount.version)
 
         // Then
-        verify(exactly = 1) { accountRepository.findAccount(testAccount.id) }
+        verify(exactly = 2) { accountRepository.findAccount(testAccount.id) }
         verify(exactly = 1) { accountRepository.updateAccount(accountToUpdate) }
         actualAccount shouldBe expectedAccount.right()
     }

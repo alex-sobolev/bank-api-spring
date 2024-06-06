@@ -3,6 +3,7 @@ package io.alex.bank.account.services
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import arrow.core.right
 import io.alex.bank.account.models.Account
 import io.alex.bank.account.models.Currency
@@ -26,17 +27,7 @@ class AccountService(
 
     fun getAccountsByCustomerId(customerId: UUID): Either<Failure, List<Account>> =
         either {
-            val customer = customerService.getCustomer(customerId)
-
-            if (customer.isLeft()) {
-                val error =
-                    customer.fold(
-                        ifLeft = { it },
-                        ifRight = { throw IllegalStateException("Customer should not be right") },
-                    )
-
-                return error.left()
-            }
+            customerService.getCustomer(customerId).bind()
 
             val accounts = accountRepository.getAccountsByCustomerId(customerId)
 
@@ -54,7 +45,11 @@ class AccountService(
 
     fun updateAccount(account: Account): Either<Failure, Account> =
         either {
-            val account = accountRepository.updateAccount(account) ?: return Failure.AccountNotFound(account.id).left()
+            // Check account exists
+            getAccount(account.id).bind()
+
+            // update account
+            val account = accountRepository.updateAccount(account) ?: return Failure.AccountVersionOutOfDate(account.id).left()
 
             return account.right()
         }
@@ -66,15 +61,10 @@ class AccountService(
         version: Int,
     ): Either<Failure, Account> =
         either {
-            val account = accountRepository.findAccount(accountId) ?: return Failure.AccountNotFound(accountId).left()
+            val account = getAccount(accountId).bind()
 
-            if (account.currency != currency) {
-                return Failure.MismatchedCurrency(account.currency, currency).left()
-            }
-
-            if (amount <= 0.toBigDecimal()) {
-                return Failure.InvalidDepositAmount(amount).left()
-            }
+            ensure(account.currency == currency) { Failure.MismatchedCurrency(account.currency, currency) }
+            ensure(amount > 0.toBigDecimal()) { Failure.InvalidDepositAmount(amount) }
 
             val accountToUpdate =
                 account.copy(
@@ -83,12 +73,9 @@ class AccountService(
                     version = version,
                 )
 
-            val updatedAccount =
-                accountRepository.updateAccount(
-                    accountToUpdate,
-                ) ?: return Failure.AccountVersionOutOfDate(accountId).left()
+            val updatedAccount = updateAccount(accountToUpdate).bind()
 
-            return updatedAccount.right()
+            updatedAccount
         }
 
     fun withdraw(
@@ -96,43 +83,32 @@ class AccountService(
         amount: BigDecimal,
         currency: Currency,
         version: Int,
-    ): Either<Failure, Account> {
-        val account = accountRepository.findAccount(accountId) ?: return Failure.AccountNotFound(accountId).left()
+    ): Either<Failure, Account> =
+        either {
+            val account = getAccount(accountId).bind()
 
-        if (account.currency != currency) {
-            return Failure.MismatchedCurrency(account.currency, currency).left()
+            ensure(account.currency == currency) { Failure.MismatchedCurrency(account.currency, currency) }
+            ensure(amount > 0.toBigDecimal()) { Failure.InvalidWithdrawAmount(amount) }
+            ensure(account.balance >= amount) { Failure.InsufficientFunds(accountId) }
+
+            val accountToUpdate =
+                account.copy(
+                    balance = account.balance - amount,
+                    updatedAt = LocalDate.now(),
+                    version = version,
+                )
+
+            val updatedAccount = updateAccount(accountToUpdate).bind()
+
+            updatedAccount
         }
 
-        if (amount <= 0.toBigDecimal()) {
-            return Failure.InvalidWithdrawAmount(amount).left()
+    fun deleteAccount(accountId: UUID): Either<Failure, Unit> =
+        either {
+            val deleteResult = accountRepository.deleteAccount(accountId)
+
+            ensure(deleteResult > 0) { Failure.AccountNotFound(accountId) }
+
+            return Unit.right()
         }
-
-        if (account.balance < amount) {
-            return Failure.InsufficientFunds(accountId).left()
-        }
-
-        val accountToUpdate =
-            account.copy(
-                balance = account.balance - amount,
-                updatedAt = LocalDate.now(),
-                version = version,
-            )
-
-        val updatedAccount =
-            accountRepository.updateAccount(
-                accountToUpdate,
-            ) ?: return Failure.AccountVersionOutOfDate(accountId).left()
-
-        return updatedAccount.right()
-    }
-
-    fun deleteAccount(accountId: UUID): Either<Failure, Unit> {
-        val deleteResult = accountRepository.deleteAccount(accountId)
-
-        if (deleteResult == 0) {
-            return Failure.AccountNotFound(accountId).left()
-        }
-
-        return Unit.right()
-    }
 }
