@@ -1,5 +1,6 @@
 package io.alex.bank.customer.models
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.time.LocalDate
 import java.util.UUID
 
@@ -41,4 +42,9 @@ data class CustomerRequest(
     val address: Address,
     val email: String?,
     val phone: String?,
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class KafkaGdprAnonymizeCustomerEvent(
+    val customerId: UUID,
 )

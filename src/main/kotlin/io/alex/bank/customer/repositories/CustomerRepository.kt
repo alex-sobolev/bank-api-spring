@@ -7,12 +7,15 @@ import io.alex.bank.db.tables.records.CustomerRecord
 import io.alex.bank.db.tables.references.CUSTOMER
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 import java.util.UUID
 
 @Repository
-class CustomerRepository(private val ctx: DSLContext) {
-    fun CustomerRecord.toDomain(): Customer {
-        return Customer(
+class CustomerRepository(
+    private val ctx: DSLContext,
+) {
+    fun CustomerRecord.toDomain(): Customer =
+        Customer(
             id = id!!,
             firstName = firstName!!,
             lastName = lastName!!,
@@ -29,10 +32,9 @@ class CustomerRepository(private val ctx: DSLContext) {
             phone = phone,
             status = CustomerStatus.valueOf(status!!),
         )
-    }
 
-    fun Customer.toRecord(): CustomerRecord {
-        return CustomerRecord().also {
+    fun Customer.toRecord(): CustomerRecord =
+        CustomerRecord().also {
             it.id = id
             it.firstName = firstName
             it.lastName = lastName
@@ -47,11 +49,27 @@ class CustomerRepository(private val ctx: DSLContext) {
             it.phone = phone
             it.status = status.name
         }
-    }
+
+    fun Customer.toAnonymizedRecord(): CustomerRecord =
+        CustomerRecord().also {
+            it.id = id
+            it.firstName = "Anonymized"
+            it.lastName = "Anonymized"
+            it.fullName = "Anonymized Anonymized"
+            it.birthdate = LocalDate.of(1900, 1, 1)
+            it.streetAddress = "Anonymized"
+            it.city = "Anonymized"
+            it.country = "Anonymized"
+            it.postalCode = null
+            it.email = null
+            it.phone = null
+            it.status = CustomerStatus.INACTIVE.name
+        }
 
     private fun upsertCustomer(customer: Customer): Customer {
         val result =
-            ctx.insertInto(CUSTOMER)
+            ctx
+                .insertInto(CUSTOMER)
                 .set(customer.toRecord())
                 .onConflict(CUSTOMER.ID)
                 .doUpdate()
@@ -86,7 +104,11 @@ class CustomerRepository(private val ctx: DSLContext) {
 
     fun findCustomer(customerId: UUID): Customer? {
         val record =
-            ctx.selectFrom(CUSTOMER).where(CUSTOMER.ID.eq(customerId)).and(CUSTOMER.STATUS.eq(CustomerStatus.ACTIVE.name)).fetchOne()
+            ctx
+                .selectFrom(CUSTOMER)
+                .where(CUSTOMER.ID.eq(customerId))
+                .and(CUSTOMER.STATUS.eq(CustomerStatus.ACTIVE.name))
+                .fetchOne()
                 ?: return null
 
         return record.toDomain()
@@ -96,10 +118,23 @@ class CustomerRepository(private val ctx: DSLContext) {
 
     fun updateCustomer(customer: Customer): Customer = upsertCustomer(customer)
 
-    fun deleteCustomer(customerId: UUID): Int {
-        return ctx.update(CUSTOMER)
+    fun deleteCustomer(customerId: UUID): Int =
+        ctx
+            .update(CUSTOMER)
             .set(CUSTOMER.STATUS, CustomerStatus.INACTIVE.name)
             .where(CUSTOMER.ID.eq(customerId))
             .execute()
+
+    fun anonymizeCustomer(customer: Customer): Customer? {
+        val record =
+            ctx
+                .update(CUSTOMER)
+                .set(customer.toAnonymizedRecord())
+                .where(CUSTOMER.ID.eq(customer.id))
+                .and(CUSTOMER.STATUS.eq(CustomerStatus.INACTIVE.name))
+                .returning()
+                .fetchOne()
+
+        return record?.toDomain()
     }
 }

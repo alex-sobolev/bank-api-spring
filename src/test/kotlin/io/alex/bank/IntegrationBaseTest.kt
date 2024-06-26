@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 
@@ -22,11 +23,12 @@ abstract class IntegrationBaseTest {
 
     @BeforeEach
     fun cleanUpDatabase() {
-        DEFAULT_SCHEMA.tables.map { table ->
-            context.truncate(table).cascade()
-        }.let {
-            context.batch(it).execute()
-        }
+        DEFAULT_SCHEMA.tables
+            .map { table ->
+                context.truncate(table).cascade()
+            }.let {
+                context.batch(it).execute()
+            }
     }
 
     companion object {
@@ -34,8 +36,11 @@ abstract class IntegrationBaseTest {
             PostgreSQLContainer(DockerImageName.parse("postgres:15.2"))
                 .withReuse(true)
 
+        private val kafkaContainer = KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.6.1"))
+
         init {
             postgresqlContainer.start()
+            kafkaContainer.start()
         }
 
         @DynamicPropertySource
@@ -44,6 +49,12 @@ abstract class IntegrationBaseTest {
             registry.add("spring.datasource.url") { postgresqlContainer.jdbcUrl }
             registry.add("spring.datasource.username") { postgresqlContainer.username }
             registry.add("spring.datasource.password") { postgresqlContainer.password }
+        }
+
+        @DynamicPropertySource
+        @JvmStatic
+        fun kafkaProperties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.kafka.bootstrap-servers") { kafkaContainer.bootstrapServers }
         }
     }
 }

@@ -2,10 +2,12 @@ package io.alex.bank.customer.services
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import io.alex.bank.account.repositories.AccountRepository
 import io.alex.bank.customer.models.Customer
+import io.alex.bank.customer.models.CustomerStatus
 import io.alex.bank.customer.repositories.CustomerRepository
 import io.alex.bank.error.Failure
 import io.alex.bank.error.Failure.CustomerNotFound
@@ -59,4 +61,16 @@ class CustomerService(
             }
         }
     }
+
+    fun anonymizeCustomer(customerId: UUID): Either<Failure, Customer> =
+        either {
+            val customer = customerRepository.findCustomer(customerId)
+            ensureNotNull(customer) { CustomerNotFound(customerId) }
+            ensure(customer.status == CustomerStatus.INACTIVE) { Failure.ActiveCustomerAnonymization(customerId) }
+
+            val result = customerRepository.anonymizeCustomer(customer)
+            ensureNotNull(result) { CustomerNotFound(customerId) }
+
+            return result.right()
+        }
 }

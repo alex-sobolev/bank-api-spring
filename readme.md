@@ -232,3 +232,33 @@ Here are the docs for Arrow-kt: https://arrow-kt.io/docs/.
 
 - Replace throwing exceptions on the service layer with Arrow's `Either` type. See the docs [here](https://apidocs.arrow-kt.io/arrow-core/arrow.core/-either/index.html).
 - On the API layer, you need to throw an exception when the `Either` is `Left`, so that the response can be mapped correctly.
+
+### Step-12
+
+We got a request from our users that they want to delete their personal data in the context of GDPR.
+The requests will be sent to a kafka topic. The bank application should consume from it and anonymize the personal data.
+
+- Implement a Kafka consumer that listens to the topic `gdpr.customer.v1`.
+- The kafka payload contains the customer email address.
+- Anonymization should happen for all personal data including customer and account.
+
+Consider using @KafkaListener to consume messages from Kafka. See the docs [here](https://docs.spring.io/spring-kafka/reference/kafka/receiving-messages/listener-annotation.html).
+
+Here is an example usage.
+
+```kotlin
+@Service
+class GdprCustomerConsumer(
+    val objectMapper: ObjectMapper,
+) {
+
+    @KafkaListener(topics = ["gdpr.customer.v1"])
+    fun consume(bytes: ByteArray, ack: Acknowledgment) {
+        val gdprCustomerEvent = objectMapper.readValue<KafkaGdprCustomerEvent>(bytes)
+
+        // Anonymize customer data
+    }
+}
+```
+
+Write an integration test to verify the anonymization process. You can use `KafkaTemplate<String, ByteArray>` to send a message to the topic.

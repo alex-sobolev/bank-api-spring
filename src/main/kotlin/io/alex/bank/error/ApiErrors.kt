@@ -33,6 +33,7 @@ fun handleFailure(failure: Failure): Nothing =
             is Failure.InvalidDepositAmount -> throw ApiException(HttpStatus.BAD_REQUEST, message)
             is Failure.InvalidWithdrawAmount -> throw ApiException(HttpStatus.BAD_REQUEST, message)
             is Failure.AccountVersionOutOfDate -> throw ApiException(HttpStatus.BAD_REQUEST, message)
+            is Failure.ActiveCustomerAnonymization -> throw ApiException(HttpStatus.BAD_REQUEST, message)
         }
     }
 
