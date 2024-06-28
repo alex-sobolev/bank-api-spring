@@ -7,7 +7,6 @@ import io.alex.bank.db.tables.records.CustomerRecord
 import io.alex.bank.db.tables.references.CUSTOMER
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDate
 import java.util.UUID
 
 @Repository
@@ -50,22 +49,6 @@ class CustomerRepository(
             it.status = status.name
         }
 
-    fun Customer.toAnonymizedRecord(): CustomerRecord =
-        CustomerRecord().also {
-            it.id = id
-            it.firstName = "Anonymized"
-            it.lastName = "Anonymized"
-            it.fullName = "Anonymized Anonymized"
-            it.birthdate = LocalDate.of(1900, 1, 1)
-            it.streetAddress = "Anonymized"
-            it.city = "Anonymized"
-            it.country = "Anonymized"
-            it.postalCode = null
-            it.email = null
-            it.phone = null
-            it.status = CustomerStatus.INACTIVE.name
-        }
-
     private fun upsertCustomer(customer: Customer): Customer {
         val result =
             ctx
@@ -102,14 +85,20 @@ class CustomerRepository(
         return result.map { it.toDomain() }
     }
 
-    fun findCustomer(customerId: UUID): Customer? {
-        val record =
+    fun findCustomer(
+        customerId: UUID,
+        includeInactive: Boolean = false,
+    ): Customer? {
+        val query =
             ctx
                 .selectFrom(CUSTOMER)
                 .where(CUSTOMER.ID.eq(customerId))
-                .and(CUSTOMER.STATUS.eq(CustomerStatus.ACTIVE.name))
-                .fetchOne()
-                ?: return null
+
+        if (!includeInactive) {
+            query.and(CUSTOMER.STATUS.eq(CustomerStatus.ACTIVE.name))
+        }
+
+        val record = query.fetchOne() ?: return null
 
         return record.toDomain()
     }
@@ -124,17 +113,4 @@ class CustomerRepository(
             .set(CUSTOMER.STATUS, CustomerStatus.INACTIVE.name)
             .where(CUSTOMER.ID.eq(customerId))
             .execute()
-
-    fun anonymizeCustomer(customer: Customer): Customer? {
-        val record =
-            ctx
-                .update(CUSTOMER)
-                .set(customer.toAnonymizedRecord())
-                .where(CUSTOMER.ID.eq(customer.id))
-                .and(CUSTOMER.STATUS.eq(CustomerStatus.INACTIVE.name))
-                .returning()
-                .fetchOne()
-
-        return record?.toDomain()
-    }
 }
