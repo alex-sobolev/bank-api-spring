@@ -2,7 +2,10 @@ package io.alex.bank.customer.services
 
 import arrow.core.left
 import arrow.core.right
+import com.ninjasquad.springmockk.SpykBean
+import io.alex.bank.IntegrationBaseTest
 import io.alex.bank.account.repositories.AccountRepository
+import io.alex.bank.customer.models.CustomerStatus
 import io.alex.bank.customer.repositories.CustomerRepository
 import io.alex.bank.error.Failure
 import io.alex.bank.fixtures.CustomerFixtures.testCustomer
@@ -11,14 +14,16 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.support.TransactionCallback
 import org.springframework.transaction.support.TransactionTemplate
 import java.util.UUID
 
-class CustomerServiceTest {
-    private val accountRepository: AccountRepository = mockk()
-    private val customerRepository: CustomerRepository = mockk()
+class CustomerServiceTest(
+    @SpykBean @Autowired private val customerRepository: CustomerRepository,
+    @SpykBean @Autowired private val accountRepository: AccountRepository,
+) : IntegrationBaseTest() {
     private val transactionTemplate: TransactionTemplate = mockk()
     private val customerService: CustomerService = CustomerService(customerRepository, accountRepository, transactionTemplate)
 
@@ -125,5 +130,41 @@ class CustomerServiceTest {
 
         // Then
         verify(exactly = 1) { customerRepository.deleteCustomer(id) }
+    }
+
+    @Test
+    fun `should anonymize a customer`() {
+        // Given
+        val id = UUID.randomUUID()
+        val customer = testCustomer(customerId = id, status = CustomerStatus.INACTIVE)
+        val expectedCustomer = customer.anonymize()
+
+        // Add customer to DB
+        customerRepository.createCustomer(customer)
+
+        // When
+        val result = customerService.anonymizeCustomer(id)
+
+        // Then
+        result shouldBe expectedCustomer.right()
+        verify(exactly = 1) { customerRepository.findCustomer(id, true) }
+        verify(exactly = 1) { customerRepository.updateCustomer(expectedCustomer) }
+    }
+
+    @Test
+    fun `should not anonymize an active customer`() {
+        // Given
+        val id = UUID.randomUUID()
+        val customer = testCustomer(customerId = id, status = CustomerStatus.ACTIVE)
+        val anonymizedCustomer = customer.anonymize().copy(status = CustomerStatus.ACTIVE)
+
+        // Add customer to DB
+        customerRepository.createCustomer(customer)
+
+        // When
+        val result = customerService.anonymizeCustomer(id)
+
+        // Then
+        result shouldBe Failure.ActiveCustomerAnonymization(id).left()
     }
 }

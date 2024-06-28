@@ -10,9 +10,11 @@ import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
-class CustomerRepository(private val ctx: DSLContext) {
-    fun CustomerRecord.toDomain(): Customer {
-        return Customer(
+class CustomerRepository(
+    private val ctx: DSLContext,
+) {
+    fun CustomerRecord.toDomain(): Customer =
+        Customer(
             id = id!!,
             firstName = firstName!!,
             lastName = lastName!!,
@@ -29,10 +31,9 @@ class CustomerRepository(private val ctx: DSLContext) {
             phone = phone,
             status = CustomerStatus.valueOf(status!!),
         )
-    }
 
-    fun Customer.toRecord(): CustomerRecord {
-        return CustomerRecord().also {
+    fun Customer.toRecord(): CustomerRecord =
+        CustomerRecord().also {
             it.id = id
             it.firstName = firstName
             it.lastName = lastName
@@ -47,11 +48,11 @@ class CustomerRepository(private val ctx: DSLContext) {
             it.phone = phone
             it.status = status.name
         }
-    }
 
     private fun upsertCustomer(customer: Customer): Customer {
         val result =
-            ctx.insertInto(CUSTOMER)
+            ctx
+                .insertInto(CUSTOMER)
                 .set(customer.toRecord())
                 .onConflict(CUSTOMER.ID)
                 .doUpdate()
@@ -84,10 +85,20 @@ class CustomerRepository(private val ctx: DSLContext) {
         return result.map { it.toDomain() }
     }
 
-    fun findCustomer(customerId: UUID): Customer? {
-        val record =
-            ctx.selectFrom(CUSTOMER).where(CUSTOMER.ID.eq(customerId)).and(CUSTOMER.STATUS.eq(CustomerStatus.ACTIVE.name)).fetchOne()
-                ?: return null
+    fun findCustomer(
+        customerId: UUID,
+        includeInactive: Boolean = false,
+    ): Customer? {
+        val query =
+            ctx
+                .selectFrom(CUSTOMER)
+                .where(CUSTOMER.ID.eq(customerId))
+
+        if (!includeInactive) {
+            query.and(CUSTOMER.STATUS.eq(CustomerStatus.ACTIVE.name))
+        }
+
+        val record = query.fetchOne() ?: return null
 
         return record.toDomain()
     }
@@ -96,10 +107,10 @@ class CustomerRepository(private val ctx: DSLContext) {
 
     fun updateCustomer(customer: Customer): Customer = upsertCustomer(customer)
 
-    fun deleteCustomer(customerId: UUID): Int {
-        return ctx.update(CUSTOMER)
+    fun deleteCustomer(customerId: UUID): Int =
+        ctx
+            .update(CUSTOMER)
             .set(CUSTOMER.STATUS, CustomerStatus.INACTIVE.name)
             .where(CUSTOMER.ID.eq(customerId))
             .execute()
-    }
 }

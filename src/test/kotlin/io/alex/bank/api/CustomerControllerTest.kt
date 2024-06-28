@@ -82,12 +82,15 @@ class CustomerControllerTest(
         addCustomerToDB(expectedFirstCustomer)
 
         val res =
-            webTestClient.get()
+            webTestClient
+                .get()
                 .uri("/api/customers")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
-                .expectStatus().isOk
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectStatus()
+                .isOk
+                .expectHeader()
+                .contentType(MediaType.APPLICATION_JSON)
                 .expectBody(ApiCustomerListPage::class.java)
                 .returnResult()
                 .responseBody!!
@@ -107,12 +110,15 @@ class CustomerControllerTest(
         val testCustomerId = expectedFirstCustomer.id
 
         val res =
-            webTestClient.get()
+            webTestClient
+                .get()
                 .uri("/api/customers/$testCustomerId")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
-                .expectStatus().isOk
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectStatus()
+                .isOk
+                .expectHeader()
+                .contentType(MediaType.APPLICATION_JSON)
                 .expectBody(Customer::class.java)
                 .returnResult()
                 .responseBody!!
@@ -125,13 +131,16 @@ class CustomerControllerTest(
         val testCustomer = newCustomerRequest
 
         val res =
-            webTestClient.post()
+            webTestClient
+                .post()
                 .uri("/api/customers")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(testCustomer)
                 .exchange()
-                .expectStatus().isOk
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectStatus()
+                .isOk
+                .expectHeader()
+                .contentType(MediaType.APPLICATION_JSON)
                 .expectBody(Customer::class.java)
                 .returnResult()
                 .responseBody!!
@@ -151,13 +160,16 @@ class CustomerControllerTest(
         val testCustomer = newCustomerRequest
 
         val createResponse =
-            webTestClient.post()
+            webTestClient
+                .post()
                 .uri("/api/customers")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(testCustomer)
                 .exchange()
-                .expectStatus().isOk
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectStatus()
+                .isOk
+                .expectHeader()
+                .contentType(MediaType.APPLICATION_JSON)
                 .expectBody(Customer::class.java)
                 .returnResult()
                 .responseBody!!
@@ -169,13 +181,16 @@ class CustomerControllerTest(
             newCustomerRequest.copy(email = "john.doe@gmail.com")
 
         val updateResponse =
-            webTestClient.put()
+            webTestClient
+                .put()
                 .uri("/api/customers/$createdCustomerId")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(updatedCustomerRequest)
                 .exchange()
-                .expectStatus().isOk
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectStatus()
+                .isOk
+                .expectHeader()
+                .contentType(MediaType.APPLICATION_JSON)
                 .expectBody(Customer::class.java)
                 .returnResult()
                 .responseBody!!
@@ -189,13 +204,16 @@ class CustomerControllerTest(
         val testCustomer = newCustomerRequest
 
         val createResponse =
-            webTestClient.post()
+            webTestClient
+                .post()
                 .uri("/api/customers")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(testCustomer)
                 .exchange()
-                .expectStatus().isOk
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectStatus()
+                .isOk
+                .expectHeader()
+                .contentType(MediaType.APPLICATION_JSON)
                 .expectBody(Customer::class.java)
                 .returnResult()
                 .responseBody!!
@@ -203,16 +221,20 @@ class CustomerControllerTest(
         val createdCustomerId = createResponse.id
 
         // 2. Delete customer
-        webTestClient.delete()
+        webTestClient
+            .delete()
             .uri("/api/customers/$createdCustomerId")
             .exchange()
-            .expectStatus().isNoContent
+            .expectStatus()
+            .isNoContent
 
         // 3. Verify customer is deleted
-        webTestClient.get()
+        webTestClient
+            .get()
             .uri("/api/customers/$createdCustomerId")
             .exchange()
-            .expectStatus().isNotFound
+            .expectStatus()
+            .isNotFound
     }
 
     // `customerRequest` validation tests
@@ -220,132 +242,154 @@ class CustomerControllerTest(
     fun `create a new customer with invalid email`() {
         val testCustomer = newCustomerRequest.copy(email = "invalid-email")
 
-        webTestClient.post()
+        webTestClient
+            .post()
             .uri("/api/customers")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(testCustomer)
             .exchange()
-            .expectStatus().isBadRequest
+            .expectStatus()
+            .isBadRequest
     }
 
     @Test
     fun `create a new customer with invalid phone number`() {
         val testCustomer = newCustomerRequest.copy(phone = "invalid-phone-number")
 
-        webTestClient.post()
+        webTestClient
+            .post()
             .uri("/api/customers")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(testCustomer)
             .exchange()
-            .expectStatus().isBadRequest
+            .expectStatus()
+            .isBadRequest
     }
 
     @Test
     fun `create a new user with a blank first name`() {
         val testCustomer = newCustomerRequest.copy(firstName = "")
 
-        webTestClient.post()
+        webTestClient
+            .post()
             .uri("/api/customers")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(testCustomer)
             .exchange()
-            .expectStatus().isBadRequest
+            .expectStatus()
+            .isBadRequest
     }
 
     @Test
     fun `create a new user with a blank last name`() {
         val testCustomer = newCustomerRequest.copy(lastName = "")
 
-        webTestClient.post()
+        webTestClient
+            .post()
             .uri("/api/customers")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(testCustomer)
             .exchange()
-            .expectStatus().isBadRequest
+            .expectStatus()
+            .isBadRequest
     }
 
     @Test
     fun `create a new user with a birthdate in the future`() {
         val testCustomer = newCustomerRequest.copy(birthdate = LocalDate.now().plusDays(1))
 
-        webTestClient.post()
+        webTestClient
+            .post()
             .uri("/api/customers")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(testCustomer)
             .exchange()
-            .expectStatus().isBadRequest
+            .expectStatus()
+            .isBadRequest
     }
 
     @Test
     fun `create a new user with a birthdate before 1910-01-01`() {
         val testCustomer = newCustomerRequest.copy(birthdate = LocalDate.of(1909, 12, 31))
 
-        webTestClient.post()
+        webTestClient
+            .post()
             .uri("/api/customers")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(testCustomer)
             .exchange()
-            .expectStatus().isBadRequest
+            .expectStatus()
+            .isBadRequest
     }
 
     @Test
     fun `create a new user with a blank street address`() {
         val testCustomer = newCustomerRequest.copy(address = newCustomerRequest.address.copy(street = ""))
 
-        webTestClient.post()
+        webTestClient
+            .post()
             .uri("/api/customers")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(testCustomer)
             .exchange()
-            .expectStatus().isBadRequest
+            .expectStatus()
+            .isBadRequest
     }
 
     @Test
     fun `create a new user with a blank city`() {
         val testCustomer = newCustomerRequest.copy(address = newCustomerRequest.address.copy(city = ""))
 
-        webTestClient.post()
+        webTestClient
+            .post()
             .uri("/api/customers")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(testCustomer)
             .exchange()
-            .expectStatus().isBadRequest
+            .expectStatus()
+            .isBadRequest
     }
 
     @Test
     fun `create a new user with a blank country`() {
         val testCustomer = newCustomerRequest.copy(address = newCustomerRequest.address.copy(country = ""))
 
-        webTestClient.post()
+        webTestClient
+            .post()
             .uri("/api/customers")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(testCustomer)
             .exchange()
-            .expectStatus().isBadRequest
+            .expectStatus()
+            .isBadRequest
     }
 
     @Test
     fun `create a new user with a blank postal code`() {
         val testCustomer = newCustomerRequest.copy(address = newCustomerRequest.address.copy(postalCode = ""))
 
-        webTestClient.post()
+        webTestClient
+            .post()
             .uri("/api/customers")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(testCustomer)
             .exchange()
-            .expectStatus().isBadRequest
+            .expectStatus()
+            .isBadRequest
     }
 
     @Test
     fun `create a new user without a postal code`() {
         val testCustomer = newCustomerRequest.copy(address = newCustomerRequest.address.copy(postalCode = null))
 
-        webTestClient.post()
+        webTestClient
+            .post()
             .uri("/api/customers")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(testCustomer)
             .exchange()
-            .expectStatus().isOk
+            .expectStatus()
+            .isOk
     }
 }
 
@@ -378,10 +422,12 @@ class ArchiveCustomerTest(
             )
 
         // 3. Delete customer
-        webTestClient.delete()
+        webTestClient
+            .delete()
             .uri("/api/customers/$createdCustomerId")
             .exchange()
-            .expectStatus().isNoContent
+            .expectStatus()
+            .isNoContent
 
         // 4. Verify customer is deleted via customer repository
         customerRepository.findCustomer(createdCustomerId) shouldBe null
@@ -420,10 +466,12 @@ class ArchiveCustomerTest(
         } throws DataIntegrityViolationException("Failed to delete accounts")
 
         // 4. try to archive customer
-        webTestClient.delete()
+        webTestClient
+            .delete()
             .uri("/api/customers/${createdCustomer.id}")
             .exchange()
-            .expectStatus().is5xxServerError
+            .expectStatus()
+            .is5xxServerError
 
         // 5. Verify customer is not archived (via customer repository)
         customerRepository.findCustomer(createdCustomer.id) shouldBe createdCustomer
@@ -458,10 +506,12 @@ class ArchiveCustomerTest(
         every { customerRepository.deleteCustomer(createdCustomer.id) } throws DataIntegrityViolationException("Failed to delete customer")
 
         // 4. try to archive customer
-        webTestClient.delete()
+        webTestClient
+            .delete()
             .uri("/api/customers/${createdCustomer.id}")
             .exchange()
-            .expectStatus().is5xxServerError
+            .expectStatus()
+            .is5xxServerError
 
         // 5. Verify customer is not archived (via customer repository)
         customerRepository.findCustomer(createdCustomer.id) shouldBe createdCustomer
