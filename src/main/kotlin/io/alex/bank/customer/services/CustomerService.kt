@@ -6,12 +6,18 @@ import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import io.alex.bank.account.repositories.AccountRepository
+import io.alex.bank.creditscore.csnu.CsnuClient
+import io.alex.bank.creditscore.scorex.ScorexClient
 import io.alex.bank.customer.models.Address
+import io.alex.bank.customer.models.CreditScore
 import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.models.CustomerStatus
+import io.alex.bank.customer.models.LoanRecommendation
 import io.alex.bank.customer.repositories.CustomerRepository
 import io.alex.bank.error.Failure
 import io.alex.bank.error.Failure.CustomerNotFound
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDate
@@ -41,6 +47,8 @@ class CustomerService(
     private val customerRepository: CustomerRepository,
     private val accountRepository: AccountRepository,
     private val transactionTemplate: TransactionTemplate,
+    private val csnuClient: CsnuClient,
+    private val scorexClient: ScorexClient,
 ) {
     fun getCustomers(
         name: String?,
@@ -52,6 +60,29 @@ class CustomerService(
         either {
             val customer = customerRepository.findCustomer(customerId)
             ensureNotNull(customer) { CustomerNotFound(customerId) }
+        }
+
+    fun getCustomerCreditScore(customerId: UUID): Either<Failure, CreditScore> =
+        either {
+            val customer = customerRepository.findCustomer(customerId)
+            ensureNotNull(customer) { CustomerNotFound(customerId) }
+
+            val averageScore =
+                runBlocking {
+                    val csnuScore = async { csnuClient.getCreditScore(customer).bind() }
+                    val scorexScore = async { scorexClient.getCreditScore(customer).bind() }
+
+                    (csnuScore.await().score + scorexScore.await().score) / 2
+                }
+
+            val recommendation =
+                when (averageScore) {
+                    in 80..100 -> LoanRecommendation.APPROVE
+                    in 60..79 -> LoanRecommendation.MAYBE
+                    else -> LoanRecommendation.REJECT
+                }
+
+            return CreditScore(score = averageScore, recommendation = recommendation).right()
         }
 
     fun createCustomer(customer: Customer): Either<Failure, Customer> =

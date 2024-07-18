@@ -262,3 +262,26 @@ class GdprCustomerConsumer(
 ```
 
 Write an integration test to verify the anonymization process. You can use `KafkaTemplate<String, ByteArray>` to send a message to the topic.
+
+### Step-13
+
+A customer came to us last week, and they asked for a loan.
+We want to implement a check on their credit score from third-party providers to determine if they are eligible for a loan in a bank.
+There are extra risks for the bank to give a loan to a customer without knowing their credit history.
+
+We are going to call two major third-party providers `Credit Score National Union (CSNU)` and `SCOREX` to get the credit score of the customer.
+
+Tasks:
+- Add an endpoint to get the credit score of the customer by customer id (GET or POST)
+- Use HTTP client to call the third-party providers' related endpoints.
+- The external providers' endpoints will return a numeric score between 0 and 100.
+- Because there are two scores, we will take the average of them.
+- Return the average score and also a recommendation to a bank manager in regard to should they approve loan or not.
+- If the average score is:
+  - less than 60: the recommendation should be `Reject`
+  - between 60 and 79: `Maybe`
+  - between 80 and 100: `Approve`
+
+Technical details:
+- Consider using [WebClient](https://docs.spring.io/spring-framework/reference/web/webflux-webclient.html) to make HTTP requests.
+- For integration tests, in order to mock a response from a third-party provider, you can use [WireMock](https://wiremock.org/docs/getting-started/).

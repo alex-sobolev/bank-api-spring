@@ -34,6 +34,7 @@ fun handleFailure(failure: Failure): Nothing =
             is Failure.InvalidWithdrawAmount -> throw ApiException(HttpStatus.BAD_REQUEST, message)
             is Failure.AccountVersionOutOfDate -> throw ApiException(HttpStatus.BAD_REQUEST, message)
             is Failure.ActiveCustomerAnonymization -> throw ApiException(HttpStatus.BAD_REQUEST, message)
+            is Failure.ThirdPartyCreditScoreRetrievalFailure -> throw ApiException(HttpStatus.INTERNAL_SERVER_ERROR, message)
         }
     }
 

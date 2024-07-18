@@ -1,6 +1,7 @@
 package io.alex.bank.api
 
 import io.alex.bank.api.mappings.CustomerMapper.toDomain
+import io.alex.bank.customer.models.ApiCustomerCreditScore
 import io.alex.bank.customer.models.ApiCustomerListPage
 import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.models.CustomerRequest
@@ -25,14 +26,12 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/api/customers")
-class CustomerController(private val customerService: CustomerService) {
-    private fun String.isValidEmail(): Boolean {
-        return emailRegex.matches(this)
-    }
+class CustomerController(
+    private val customerService: CustomerService,
+) {
+    private fun String.isValidEmail(): Boolean = emailRegex.matches(this)
 
-    private fun isValidPhoneNumber(phoneNumber: String): Boolean {
-        return phoneNumberRegex.matches(phoneNumber)
-    }
+    private fun isValidPhoneNumber(phoneNumber: String): Boolean = phoneNumberRegex.matches(phoneNumber)
 
     private fun validateCustomerRequest(customerRequest: CustomerRequest) {
         if (customerRequest.firstName.isBlank()) throw IllegalArgumentException("First name is required")
@@ -90,6 +89,31 @@ class CustomerController(private val customerService: CustomerService) {
             .toResponseOrThrow()
     }
 
+    @GetMapping("/{customerId}/credit-score")
+    fun getCustomerCreditScore(
+        @PathVariable customerId: UUID,
+    ): ResponseEntity<ApiCustomerCreditScore> {
+        val customer =
+            customerService
+                .getCustomer(customerId)
+                .fold(
+                    ifLeft = { handleFailure(it) },
+                    ifRight = { it },
+                )
+
+        val creditScore =
+            customerService
+                .getCustomerCreditScore(customerId)
+                .fold(
+                    ifLeft = { handleFailure(it) },
+                    ifRight = { it },
+                )
+
+        val payload = ApiCustomerCreditScore(customer = customer, creditScore = creditScore)
+
+        return ResponseEntity(payload, HttpStatus.OK)
+    }
+
     @PostMapping
     fun createCustomer(
         @RequestBody customerRequest: CustomerRequest,
@@ -127,7 +151,8 @@ class CustomerController(private val customerService: CustomerService) {
     ) {
         val customerUuid = parseUuidFromString(customerId, "Invalid customer id format")
 
-        customerService.getCustomer(customerUuid)
+        customerService
+            .getCustomer(customerUuid)
             .fold(
                 ifLeft = { handleFailure(it) },
                 ifRight = { it },
