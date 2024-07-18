@@ -1,63 +1,49 @@
 package io.alex.bank.creditscore.csnu
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.right
 import io.alex.bank.creditscore.csnu.CsnuMapper.toCsnuCreditScoreRequest
-import io.alex.bank.creditscore.csnu.CsnuMapper.toThirdPartyCreditScore
 import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.models.ThirdPartyCreditScore
 import io.alex.bank.error.Failure
+import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.awaitBody
+import org.springframework.web.reactive.function.client.bodyToMono
 
 @Component
 class CsnuClient(
     private val webClient: WebClient,
 ) {
     suspend fun getCreditScore(customer: Customer): Either<Failure, ThirdPartyCreditScore> =
-        Either
-            .catch {
-                val requestPayload = customer.toCsnuCreditScoreRequest()
+        webClient
+            .post()
+            .uri("https://api.csnu.com/creditscore")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(customer.toCsnuCreditScoreRequest())
+            .exchangeToMono<Either<Failure, ThirdPartyCreditScore>> { response ->
+                when {
+                    response.statusCode().is2xxSuccessful -> response.bodyToMono<ThirdPartyCreditScore>().map { res -> res.right() }
 
-                val res =
-                    webClient
-                        .post()
-                        .uri("https://api.csnu.com/creditscore")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(requestPayload)
-                        .retrieve()
-                        .onStatus({ status -> status.is4xxClientError }) { clientResponse ->
-                            throw ClientErrorException(clientResponse.statusCode().toString())
-                        }.onStatus({ status -> status.is5xxServerError }) { clientResponse ->
-                            throw ServerErrorException(clientResponse.statusCode().toString())
-                        }.awaitBody<CsnuCreditScoreResponse>()
+                    response.statusCode().is4xxClientError ->
+                        response.bodyToMono<String>().map { msg ->
+                            Failure
+                                .ThirdPartyCreditScoreRetrievalFailure(
+                                    providerName = "CSNU",
+                                    msg = msg ?: "Client error",
+                                ).left()
+                        }
 
-                return res.toThirdPartyCreditScore().right()
-            }.mapLeft { e ->
-                when (e) {
-                    is ClientErrorException ->
-                        Failure.ThirdPartyCreditScoreRetrievalFailure(
-                            providerName = "CSNU",
-                            msg =
-                                e.message ?: "Client error",
-                        )
-                    is ServerErrorException ->
-                        Failure.ThirdPartyCreditScoreRetrievalFailure(
-                            providerName = "CSNU",
-                            msg =
-                                e.message ?: "Server error",
-                        )
-                    else -> Failure.ThirdPartyCreditScoreRetrievalFailure(providerName = "CSNU", msg = e.message ?: "Unknown error")
+                    else ->
+                        response.bodyToMono<String>().map { msg ->
+                            Failure
+                                .ThirdPartyCreditScoreRetrievalFailure(
+                                    providerName = "CSNU",
+                                    msg = msg ?: "Server error",
+                                ).left()
+                        }
                 }
-            }
+            }.awaitSingle()
 }
-
-class ClientErrorException(
-    message: String,
-) : Exception(message)
-
-class ServerErrorException(
-    message: String,
-) : Exception(message)

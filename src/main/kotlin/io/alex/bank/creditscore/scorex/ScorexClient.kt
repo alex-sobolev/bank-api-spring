@@ -1,64 +1,49 @@
 package io.alex.bank.creditscore.scorex
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.right
-import io.alex.bank.creditscore.csnu.ClientErrorException
-import io.alex.bank.creditscore.csnu.ServerErrorException
 import io.alex.bank.creditscore.scorex.CsnuMapper.toScorexCreditScoreRequest
 import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.models.ThirdPartyCreditScore
 import io.alex.bank.error.Failure
+import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.awaitBody
+import org.springframework.web.reactive.function.client.bodyToMono
 
 @Component
 class ScorexClient(
     private val webClient: WebClient,
 ) {
     suspend fun getCreditScore(customer: Customer): Either<Failure, ThirdPartyCreditScore> =
-        Either
-            .catch {
-                val requestPayload = customer.toScorexCreditScoreRequest()
+        webClient
+            .post()
+            .uri("https://api.csnu.com/creditscore")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(customer.toScorexCreditScoreRequest())
+            .exchangeToMono<Either<Failure, ThirdPartyCreditScore>> { response ->
+                when {
+                    response.statusCode().is2xxSuccessful -> response.bodyToMono<ThirdPartyCreditScore>().map { res -> res.right() }
 
-                val res =
-                    webClient
-                        .post()
-                        .uri("https://api.csnu.com/creditscore")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(requestPayload)
-                        .retrieve()
-                        .onStatus({ status -> status.is4xxClientError }) { clientResponse ->
-                            throw ClientErrorException(clientResponse.statusCode().toString())
-                        }.onStatus({ status -> status.is5xxServerError }) { clientResponse ->
-                            throw ServerErrorException(clientResponse.statusCode().toString())
-                        }.awaitBody<ScorexCreditScoreResponse>()
+                    response.statusCode().is4xxClientError ->
+                        response.bodyToMono<String>().map { msg ->
+                            Failure
+                                .ThirdPartyCreditScoreRetrievalFailure(
+                                    providerName = "Scorex",
+                                    msg = msg ?: "Client error",
+                                ).left()
+                        }
 
-                return ThirdPartyCreditScore(score = res.creditScore).right()
-            }.mapLeft { e ->
-                when (e) {
-                    is ClientErrorException ->
-                        Failure.ThirdPartyCreditScoreRetrievalFailure(
-                            providerName = "CSNU",
-                            msg =
-                                e.message ?: "Client error",
-                        )
-                    is ServerErrorException ->
-                        Failure.ThirdPartyCreditScoreRetrievalFailure(
-                            providerName = "CSNU",
-                            msg =
-                                e.message ?: "Server error",
-                        )
-                    else -> Failure.ThirdPartyCreditScoreRetrievalFailure(providerName = "CSNU", msg = e.message ?: "Unknown error")
+                    else ->
+                        response.bodyToMono<String>().map { msg ->
+                            Failure
+                                .ThirdPartyCreditScoreRetrievalFailure(
+                                    providerName = "Scorex",
+                                    msg = msg ?: "Server error",
+                                ).left()
+                        }
                 }
-            }
+            }.awaitSingle()
 }
-
-class ClientErrorException(
-    message: String,
-) : Exception(message)
-
-class ServerErrorException(
-    message: String,
-) : Exception(message)
