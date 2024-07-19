@@ -1,10 +1,9 @@
 package io.alex.bank.creditscore.scorex
 
-import io.alex.bank.creditscore.csnu.CsnuCreditScoreResponse
 import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.models.ThirdPartyCreditScore
 
-object CsnuMapper {
+object ScorexMapper {
     fun Customer.toScorexCreditScoreRequest() =
         ScorexCreditScoreRequest(
             firstName = firstName,
@@ -15,5 +14,5 @@ object CsnuMapper {
             phone = phone ?: "",
         )
 
-    fun CsnuCreditScoreResponse.toThirdPartyCreditScore() = ThirdPartyCreditScore(score = score)
+    fun ScorexCreditScoreResponse.toThirdPartyCreditScore() = ThirdPartyCreditScore(score = creditScore)
 }

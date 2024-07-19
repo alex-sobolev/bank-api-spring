@@ -5,6 +5,8 @@ import arrow.core.right
 import com.ninjasquad.springmockk.SpykBean
 import io.alex.bank.IntegrationBaseTest
 import io.alex.bank.account.repositories.AccountRepository
+import io.alex.bank.creditscore.csnu.CsnuClient
+import io.alex.bank.creditscore.scorex.ScorexClient
 import io.alex.bank.customer.models.CustomerStatus
 import io.alex.bank.customer.repositories.CustomerRepository
 import io.alex.bank.error.Failure
@@ -23,9 +25,12 @@ import java.util.UUID
 class CustomerServiceTest(
     @SpykBean @Autowired private val customerRepository: CustomerRepository,
     @SpykBean @Autowired private val accountRepository: AccountRepository,
+    @SpykBean @Autowired private val csnuClient: CsnuClient,
+    @SpykBean @Autowired private val scorexClient: ScorexClient,
 ) : IntegrationBaseTest() {
     private val transactionTemplate: TransactionTemplate = mockk()
-    private val customerService: CustomerService = CustomerService(customerRepository, accountRepository, transactionTemplate)
+    private val customerService: CustomerService =
+        CustomerService(customerRepository, accountRepository, transactionTemplate, csnuClient, scorexClient)
 
     @Test
     fun `getCustomers calls repository`() {
