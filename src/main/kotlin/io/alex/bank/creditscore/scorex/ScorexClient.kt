@@ -16,10 +16,10 @@ import org.springframework.web.reactive.function.client.bodyToMono
 
 @Component
 class ScorexClient(
-    private val sorexWebClient: WebClient,
+    private val scorexWebClient: WebClient,
 ) {
     suspend fun getCreditScore(customer: Customer): Either<Failure, ThirdPartyCreditScore> =
-        sorexWebClient
+        scorexWebClient
             .post()
             .uri("/creditscore")
             .contentType(MediaType.APPLICATION_JSON)
