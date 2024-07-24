@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.alex.bank.creditscore.csnu.CsnuMapper.toCsnuCreditScoreRequest
+import io.alex.bank.creditscore.csnu.CsnuMapper.toThirdPartyCreditScore
 import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.models.ThirdPartyCreditScore
 import io.alex.bank.error.Failure
@@ -15,17 +16,20 @@ import org.springframework.web.reactive.function.client.bodyToMono
 
 @Component
 class CsnuClient(
-    private val webClient: WebClient,
+    private val csnuWebClient: WebClient,
 ) {
     suspend fun getCreditScore(customer: Customer): Either<Failure, ThirdPartyCreditScore> =
-        webClient
+        csnuWebClient
             .post()
-            .uri("https://api.csnu.com/creditscore")
+            .uri("/credit-score")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(customer.toCsnuCreditScoreRequest())
             .exchangeToMono<Either<Failure, ThirdPartyCreditScore>> { response ->
                 when {
-                    response.statusCode().is2xxSuccessful -> response.bodyToMono<ThirdPartyCreditScore>().map { res -> res.right() }
+                    response.statusCode().is2xxSuccessful ->
+                        response.bodyToMono<CsnuCreditScoreResponse>().map { res ->
+                            res.toThirdPartyCreditScore().right()
+                        }
 
                     response.statusCode().is4xxClientError ->
                         response.bodyToMono<String>().map { msg ->
