@@ -3,6 +3,7 @@ package io.alex.bank
 import com.github.tomakehurst.wiremock.WireMockServer
 import io.alex.bank.db.DefaultSchema.Companion.DEFAULT_SCHEMA
 import org.jooq.DSLContext
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
@@ -35,6 +36,16 @@ abstract class IntegrationBaseTest {
             }.let {
                 context.batch(it).execute()
             }
+    }
+
+    @AfterEach
+    fun cleanup() {
+        clearAllWireMocks()
+    }
+
+    fun clearAllWireMocks() {
+        wireMockServer.resetAll()
+        wireMockServer.resetScenarios()
     }
 
     companion object {
