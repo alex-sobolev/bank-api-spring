@@ -1,16 +1,18 @@
 package io.alex.bank.creditscore.scorex
 
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 import org.springframework.web.reactive.function.client.WebClient
 
-@Component
+@Configuration
 class WebClientProvider(
     @Value("\${scorex.base.url}") private val baseUrl: String,
 ) {
     private val authToken = "eyJ"
 
-    fun createWebClient(): WebClient =
+    @Bean
+    fun scorexWebClient(): WebClient =
         WebClient
             .builder()
             .baseUrl(baseUrl)
