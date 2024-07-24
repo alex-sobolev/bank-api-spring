@@ -1,1 +1,3 @@
-scorex.base.url=http://localhost:8080
+scorex:
+  base:
+    url: http://localhost:8080

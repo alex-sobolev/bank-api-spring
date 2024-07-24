@@ -1,6 +1,10 @@
 server:
   port: ${SERVER_PORT:8080}
 
+scorex:
+  base:
+    url: https://api.scorex.com
+
 spring:
   application:
     name: bank

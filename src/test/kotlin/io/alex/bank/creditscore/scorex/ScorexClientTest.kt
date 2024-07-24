@@ -23,7 +23,7 @@ class ScorexClientTest(
         val request = customer.toScorexCreditScoreRequest()
 
         stubFor(
-            post(urlEqualTo("/api.scorex.com/creditscore"))
+            post(urlEqualTo("/creditscore"))
                 .willReturn(
                     aResponse()
                         .withStatus(200)

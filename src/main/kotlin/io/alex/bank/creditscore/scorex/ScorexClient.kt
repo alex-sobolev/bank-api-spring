@@ -21,7 +21,7 @@ class ScorexClient(
     suspend fun getCreditScore(customer: Customer): Either<Failure, ThirdPartyCreditScore> =
         webClient
             .post()
-            .uri("https://api.scorex.com/creditscore")
+            .uri("/creditscore")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(customer.toScorexCreditScoreRequest())
             .exchangeToMono<Either<Failure, ThirdPartyCreditScore>> { response ->
