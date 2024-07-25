@@ -82,7 +82,7 @@ class CustomerService(
                     else -> LoanRecommendation.REJECT
                 }
 
-            return CreditScore(score = averageScore, recommendation = recommendation).right()
+            CreditScore(score = averageScore, recommendation = recommendation)
         }
 
     fun createCustomer(customer: Customer): Either<Failure, Customer> =

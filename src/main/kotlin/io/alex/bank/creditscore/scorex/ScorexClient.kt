@@ -9,6 +9,8 @@ import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.models.ThirdPartyCreditScore
 import io.alex.bank.error.Failure
 import kotlinx.coroutines.reactor.awaitSingle
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
@@ -34,7 +36,7 @@ class ScorexClient(
                     response.statusCode().is4xxClientError ->
                         response.bodyToMono<String>().map { msg ->
                             Failure
-                                .ThirdPartyCreditScoreRetrievalFailure(
+                                .ThirdPartyCreditScoreRetrievalFailureClient(
                                     providerName = "Scorex",
                                     msg = msg ?: "Client error",
                                 ).left()
@@ -43,11 +45,18 @@ class ScorexClient(
                     else ->
                         response.bodyToMono<String>().map { msg ->
                             Failure
-                                .ThirdPartyCreditScoreRetrievalFailure(
+                                .ThirdPartyCreditScoreRetrievalFailureServer(
                                     providerName = "Scorex",
                                     msg = msg ?: "Server error",
                                 ).left()
                         }
                 }
             }.awaitSingle()
+            .onLeft {
+                logger.error("Failed to retrieve credit score from Scorex: $it")
+            }
+
+    companion object {
+        val logger: Logger = LoggerFactory.getLogger(ScorexClient::class.java)
+    }
 }

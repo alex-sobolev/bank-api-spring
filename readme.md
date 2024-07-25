@@ -285,3 +285,4 @@ Tasks:
 Technical details:
 - Consider using [WebClient](https://docs.spring.io/spring-framework/reference/web/webflux-webclient.html) to make HTTP requests.
 - For integration tests, in order to mock a response from a third-party provider, you can use [WireMock](https://wiremock.org/docs/getting-started/).
+- Consider using Kotlin coroutine [async](https://kotlinlang.org/docs/composing-suspending-functions.html#concurrent-using-async) to make parallel requests to the third-party providers.

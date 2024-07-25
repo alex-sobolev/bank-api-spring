@@ -8,6 +8,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import io.alex.bank.IntegrationBaseTest
 import io.alex.bank.customer.models.ThirdPartyCreditScore
 import io.alex.bank.fixtures.CustomerFixtures.testCustomer
+import io.alex.bank.fixtures.ScorexClientFixtures.testScorexCreditScoreResponse
+import io.alex.bank.fixtures.ScorexClientFixtures.testScorexCreditScoreResponseError
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -26,7 +28,7 @@ class ScorexClientTest(
                     aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("""{"creditScore": 80, "customer": "Customer 1"}"""),
+                        .withBody(testScorexCreditScoreResponse(score = 80)),
                 ),
         )
 
@@ -45,7 +47,7 @@ class ScorexClientTest(
                     aResponse()
                         .withStatus(400)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("""{"error": "Bad request"}"""),
+                        .withBody(testScorexCreditScoreResponseError(error = "Bad request")),
                 ),
         )
 

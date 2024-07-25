@@ -1,6 +1,9 @@
 package io.alex.bank.api
 
-import arrow.core.right
+import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.ninjasquad.springmockk.SpykBean
 import io.alex.bank.IntegrationBaseTest
 import io.alex.bank.account.models.Account
@@ -8,6 +11,8 @@ import io.alex.bank.account.models.AccountStatus
 import io.alex.bank.account.models.AccountType
 import io.alex.bank.account.models.Currency
 import io.alex.bank.account.repositories.AccountRepository
+import io.alex.bank.creditscore.csnu.CsnuClient
+import io.alex.bank.creditscore.scorex.ScorexClient
 import io.alex.bank.customer.models.Address
 import io.alex.bank.customer.models.ApiCustomerCreditScore
 import io.alex.bank.customer.models.ApiCustomerListPage
@@ -17,12 +22,11 @@ import io.alex.bank.customer.models.CustomerRequest
 import io.alex.bank.customer.models.CustomerStatus
 import io.alex.bank.customer.models.LoanRecommendation.APPROVE
 import io.alex.bank.customer.repositories.CustomerRepository
-import io.alex.bank.customer.services.CustomerService
+import io.alex.bank.fixtures.CsnuClientFixtures.testCsnuCreditScoreResponse
 import io.alex.bank.fixtures.CustomerFixtures.testCustomer
+import io.alex.bank.fixtures.ScorexClientFixtures.testScorexCreditScoreResponse
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
@@ -35,16 +39,9 @@ import java.util.UUID
 class CustomerControllerTest(
     @Autowired private val webTestClient: WebTestClient,
     @Autowired private val customerRepository: CustomerRepository,
-    @SpykBean @Autowired private val customerService: CustomerService,
+    @Autowired private val csnuClient: CsnuClient,
+    @Autowired private val scorexClient: ScorexClient,
 ) : IntegrationBaseTest() {
-    @BeforeEach
-    fun setUp() {
-    }
-
-    @AfterEach
-    fun tearDown() {
-    }
-
     companion object {
         val expectedFirstCustomer =
             Customer(
@@ -395,7 +392,7 @@ class CustomerControllerTest(
     }
 
     @Test
-    fun `returns credit score for a customer by id`() {
+    fun `returns credit score for a customer by customerId`() {
         // Given
         val customerId = UUID.randomUUID()
         val customer = testCustomer(customerId = customerId)
@@ -403,9 +400,32 @@ class CustomerControllerTest(
         // Add customer to DB
         customerRepository.createCustomer(customer)
 
-        val expectedCreditScore = CreditScore(score = 80, recommendation = APPROVE)
+        val cnsuCreditScore = 80
+        val scorexCreditScore = 90
+        val averageCreditScore = (cnsuCreditScore + scorexCreditScore) / 2
+        val expectedCreditScore = CreditScore(score = averageCreditScore, recommendation = APPROVE)
 
-        every { customerService.getCustomerCreditScore(customerId) } returns expectedCreditScore.right()
+        // Use WireMock to stub CsnuClient
+        stubFor(
+            post(urlEqualTo("/credit-score"))
+                .willReturn(
+                    aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(testCsnuCreditScoreResponse(score = cnsuCreditScore)),
+                ),
+        )
+
+        // Use WireMock to stub ScorexClient
+        stubFor(
+            post(urlEqualTo("/creditscore"))
+                .willReturn(
+                    aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(testScorexCreditScoreResponse(score = scorexCreditScore)),
+                ),
+        )
 
         // When
         val res =
