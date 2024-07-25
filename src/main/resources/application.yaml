@@ -1,6 +1,14 @@
 server:
   port: ${SERVER_PORT:8080}
 
+csnu:
+  base:
+    url: https://api.csnum.com
+
+scorex:
+  base:
+    url: https://api.scorex.com
+
 spring:
   application:
     name: bank

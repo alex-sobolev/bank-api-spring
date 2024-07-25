@@ -9,6 +9,12 @@ enum class CustomerStatus {
     INACTIVE,
 }
 
+enum class LoanRecommendation {
+    APPROVE,
+    REJECT,
+    MAYBE,
+}
+
 data class Customer(
     val id: UUID,
     val firstName: String,
@@ -19,6 +25,20 @@ data class Customer(
     val email: String?,
     val phone: String?,
     val status: CustomerStatus,
+)
+
+data class CreditScore(
+    val score: Int,
+    val recommendation: LoanRecommendation,
+)
+
+data class ThirdPartyCreditScore(
+    val score: Int,
+)
+
+data class ApiCustomerCreditScore(
+    val customer: Customer,
+    val creditScore: CreditScore,
 )
 
 data class Address(

@@ -1,0 +1,7 @@
+csnu:
+  base:
+    url: http://localhost:${wiremock.server.port}
+
+scorex:
+  base:
+    url: http://localhost:${wiremock.server.port}

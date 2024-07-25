@@ -1,11 +1,15 @@
 package io.alex.bank
 
+import com.github.tomakehurst.wiremock.WireMockServer
 import io.alex.bank.db.DefaultSchema.Companion.DEFAULT_SCHEMA
 import org.jooq.DSLContext
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.KafkaContainer
@@ -16,10 +20,15 @@ import org.testcontainers.utility.DockerImageName
     classes = [BankApplication::class],
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 )
+@ActiveProfiles("test")
 @AutoConfigureWebTestClient(timeout = "PT2M")
+@AutoConfigureWireMock(port = 0)
 abstract class IntegrationBaseTest {
     @Autowired
     lateinit var context: DSLContext
+
+    @Autowired
+    private lateinit var wireMockServer: WireMockServer
 
     @BeforeEach
     fun cleanUpDatabase() {
@@ -29,6 +38,16 @@ abstract class IntegrationBaseTest {
             }.let {
                 context.batch(it).execute()
             }
+    }
+
+    @AfterEach
+    fun cleanup() {
+        clearAllWireMocks()
+    }
+
+    fun clearAllWireMocks() {
+        wireMockServer.resetAll()
+        wireMockServer.resetScenarios()
     }
 
     companion object {

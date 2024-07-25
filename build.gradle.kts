@@ -36,16 +36,19 @@ dependencies {
     implementation("org.jooq:jooq:${RecommendedVersions.JOOQ_VERSION}")
     implementation("io.arrow-kt:arrow-core:2.0.0-alpha.2")
     implementation("io.arrow-kt:arrow-fx-coroutines:2.0.0-alpha.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.boot:spring-boot-starter-webflux")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("io.kotest:kotest-assertions-core:5.9.1")
     testImplementation("org.testcontainers:kafka")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
-    testImplementation("io.mockk:mockk:1.13.10")
+    testImplementation("io.mockk:mockk:1.13.12")
     testImplementation("com.ninja-squad:springmockk:4.0.2")
+    testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.2")
+    testImplementation("org.springframework.cloud:spring-cloud-contract-wiremock:4.1.3")
 }
 
 val jooqGeneratedClassesDirName = "generated-jooq"
