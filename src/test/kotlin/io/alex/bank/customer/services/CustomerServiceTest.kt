@@ -8,6 +8,8 @@ import io.alex.bank.account.repositories.AccountRepository
 import io.alex.bank.creditscore.csnu.CsnuClient
 import io.alex.bank.creditscore.scorex.ScorexClient
 import io.alex.bank.customer.models.CustomerStatus
+import io.alex.bank.customer.models.LoanRecommendation
+import io.alex.bank.customer.models.ThirdPartyCreditScore
 import io.alex.bank.customer.repositories.CustomerRepository
 import io.alex.bank.error.Failure
 import io.alex.bank.fixtures.CustomerFixtures.testCustomer
@@ -15,6 +17,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.TransactionStatus
@@ -171,5 +174,33 @@ class CustomerServiceTest(
 
         // Then
         result shouldBe Failure.ActiveCustomerAnonymization(id).left()
+    }
+
+    @Test
+    fun `should return average credit score for a customer`() {
+        // Given
+        val customerId = UUID.randomUUID()
+        val customer = testCustomer(customerId = customerId)
+
+        // Add customer to DB
+        customerRepository.createCustomer(customer)
+
+        val csnuCreditScore = 80
+        val scorexCreditScore = 90
+        val averageScore = (csnuCreditScore + scorexCreditScore) / 2 // 85
+
+        every { runBlocking { csnuClient.getCreditScore(customer) } } returns ThirdPartyCreditScore(score = csnuCreditScore).right()
+        every { runBlocking { scorexClient.getCreditScore(customer) } } returns ThirdPartyCreditScore(score = scorexCreditScore).right()
+
+        // When
+        val result =
+            customerService.getCustomerCreditScore(customer.id).fold(
+                ifLeft = { null },
+                ifRight = { it },
+            )
+
+        // Then
+        result?.score shouldBe averageScore
+        result?.recommendation shouldBe LoanRecommendation.APPROVE
     }
 }
