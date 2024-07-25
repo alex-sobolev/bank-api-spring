@@ -1,5 +1,6 @@
 package io.alex.bank.api
 
+import arrow.core.right
 import com.ninjasquad.springmockk.SpykBean
 import io.alex.bank.IntegrationBaseTest
 import io.alex.bank.account.models.Account
@@ -7,13 +8,16 @@ import io.alex.bank.account.models.AccountStatus
 import io.alex.bank.account.models.AccountType
 import io.alex.bank.account.models.Currency
 import io.alex.bank.account.repositories.AccountRepository
-import io.alex.bank.api.CustomerControllerTest.Companion.newCustomerRequest
 import io.alex.bank.customer.models.Address
+import io.alex.bank.customer.models.ApiCustomerCreditScore
 import io.alex.bank.customer.models.ApiCustomerListPage
+import io.alex.bank.customer.models.CreditScore
 import io.alex.bank.customer.models.Customer
 import io.alex.bank.customer.models.CustomerRequest
 import io.alex.bank.customer.models.CustomerStatus
+import io.alex.bank.customer.models.LoanRecommendation.APPROVE
 import io.alex.bank.customer.repositories.CustomerRepository
+import io.alex.bank.customer.services.CustomerService
 import io.alex.bank.fixtures.CustomerFixtures.testCustomer
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -28,12 +32,10 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.UUID
 
-// Customer data comes from "src/main/resources/customer-mock-data.csv"
-// After we switch to Postgresql, we will use a real database instead of mock data
 class CustomerControllerTest(
     @Autowired private val webTestClient: WebTestClient,
     @Autowired private val customerRepository: CustomerRepository,
-    @Autowired private val accountRepository: AccountRepository,
+    @SpykBean @Autowired private val customerService: CustomerService,
 ) : IntegrationBaseTest() {
     @BeforeEach
     fun setUp() {
@@ -390,6 +392,39 @@ class CustomerControllerTest(
             .exchange()
             .expectStatus()
             .isOk
+    }
+
+    @Test
+    fun `returns credit score for a customer by id`() {
+        // Given
+        val customerId = UUID.randomUUID()
+        val customer = testCustomer(customerId = customerId)
+
+        // Add customer to DB
+        customerRepository.createCustomer(customer)
+
+        val expectedCreditScore = CreditScore(score = 80, recommendation = APPROVE)
+
+        every { customerService.getCustomerCreditScore(customerId) } returns expectedCreditScore.right()
+
+        // When
+        val res =
+            webTestClient
+                .get()
+                .uri("/api/customers/$customerId/credit-score")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectHeader()
+                .contentType(MediaType.APPLICATION_JSON)
+                .expectBody(ApiCustomerCreditScore::class.java)
+                .returnResult()
+                .responseBody!!
+
+        // Then
+        res.customer.id shouldBe customerId
+        res.creditScore shouldBe expectedCreditScore
     }
 }
 
