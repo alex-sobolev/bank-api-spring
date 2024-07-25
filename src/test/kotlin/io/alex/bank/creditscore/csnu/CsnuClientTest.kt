@@ -7,6 +7,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.stubFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import io.alex.bank.IntegrationBaseTest
 import io.alex.bank.customer.models.ThirdPartyCreditScore
+import io.alex.bank.fixtures.CsnuClientFixtures.testCsnuCreditScoreResponse
+import io.alex.bank.fixtures.CsnuClientFixtures.testCsnuCreditScoreResponseError
 import io.alex.bank.fixtures.CustomerFixtures.testCustomer
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
@@ -26,7 +28,7 @@ class CsnuClientTest(
                     aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("""{"score": 80, "customerName": "Customer 1"}"""),
+                        .withBody(testCsnuCreditScoreResponse(score = 80)),
                 ),
         )
 
@@ -45,7 +47,7 @@ class CsnuClientTest(
                     aResponse()
                         .withStatus(400)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("""{"error": "Bad request"}"""),
+                        .withBody(testCsnuCreditScoreResponseError(error = "Bad request")),
                 ),
         )
 

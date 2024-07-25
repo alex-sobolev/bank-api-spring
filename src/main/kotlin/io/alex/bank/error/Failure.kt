@@ -56,7 +56,14 @@ sealed class Failure {
         override val message: String = "Cannot anonymize an active customer: a customer with id $customerId is still active"
     }
 
-    data class ThirdPartyCreditScoreRetrievalFailure(
+    data class ThirdPartyCreditScoreRetrievalFailureClient(
+        val providerName: String,
+        val msg: String,
+    ) : Failure() {
+        override val message: String = "Failed to retrieve credit score from third party: $providerName: $msg"
+    }
+
+    data class ThirdPartyCreditScoreRetrievalFailureServer(
         val providerName: String,
         val msg: String,
     ) : Failure() {
